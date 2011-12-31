@@ -1,0 +1,392 @@
+/*
+    // determine whether you should insert a newline or not
+    // note: the newline will not be part of the prior substring
+    if ( toAdd == " " ) {
+
+ 	var number = Math.floor(Math.random()*100);
+	if ( printingDetails == "verbose" ) {
+	    detailsString += "number was: " + number + " and probability was: " + numberOfNewlines + "\n\n";
+	}
+
+	if ( number <= numberOfNewlines ) {
+
+             outputString += "\n";
+             toAddNewline = "just added";
+
+	     if ( printingDetails == "verbose" || printingDetails == "some" ) {
+		 detailsString += "deciding to insert a newline\n\n";
+	     }
+	} else {
+             toAddNewline = "false";
+        }
+    }
+
+*/
+
+
+// TO DO: undo this.  make markov vs linking distinction
+// TO DO: replace toAdd in the Ifs with a var that is the last char in the toAdd in case of 1-char overlap
+
+//     var lastCharInToAdd = toAdd.charAt(toAdd.length-1);
+
+//     if ( printingDetails == "verbose" ) {
+//	  detailsString += "  last character in toAdd: |" + lastCharInToAdd + "|\n";
+//	  detailsString += "\n";
+//     }
+
+
+    //if ( toAdd == "\n" || toAdd == "\r" || toAddNewline == "starting" || toAddNewline == "just added" ) {
+    //if ( toAdd.indexOf("\n") != -1 || toAdd.indexOf("\r") != || toAddNewline == "starting" || toAddNewline == "just added" ) {
+
+
+/*    
+    	// determine whether you should add spaces
+	var number = Math.floor(Math.random()*100);
+
+	if ( number <= probOfSpaces ) {
+
+	     var plusOrMinus = Math.floor(Math.random()*2);
+	     var plusOrMinusAmount = Math.floor(Math.random()*numberOfSpacesPlusMinus);
+	     if ( plusOrMinus == 1 ) {
+		spacesToInsert = numberOfSpaces + plusOrMinusAmount;
+	     } else {
+		spacesToInsert = numberOfSpaces - plusOrMinusAmount;
+	     }
+
+	     if ( printingDetails == "verbose" ) {
+		 detailsString += "number probability: " + number + ", plus or Minus: " + plusOrMinus + ", plus or minus amount: " + plusOrMinusAmount + "%\n\n";
+	     }    
+
+	     for ( var j=1; j<=spacesToInsert; j++ ) {
+		 toInsertSpaces += " ";
+	     }
+
+	     if ( printingDetails == "verbose" ) {
+		 detailsString += "spaces to add: " + spacesToInsert + "\n\n";
+	     }
+    
+    	}
+*/
+
+
+    // add the spaces and the identified character to the string that will be output
+    if ( toAddNewline == "starting" || toAddNewline == "just added" ) {
+//        outputString += toInsertSpaces;
+//        outputString += toAdd;
+//        toAddNewline = "false";
+    } else {
+        outputString += toAdd;
+        outputString += toInsertSpaces;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+//    if ( key == "\n" ) { 
+//       keyPrint = "NEWLINE"; 
+//    } else if ( key == " " ) { 
+//       keyPrint = "SPACE"; 
+//    }
+
+
+
+
+    } else if ( ngramLength == 2 ) {
+      if ( i < inputString.length - 1 ) {
+         ngram = inputString.charAt(i) + inputString.charAt(i+1) ;
+      } else {
+         break;
+      }
+    } else  if ( ngramLength == 3 ) { 
+      if ( i < inputString.length - 2 ) {
+         ngram = inputString.charAt(i) + inputString.charAt(i+1) + inputString.charAt(i+2);
+      } else {
+         break;
+      }
+
+
+
+
+
+function analyzeInput() {
+
+  var inputString = document.charNGramForm.inputArea.value;
+  var outputString = "";
+  var charCount = new Object();
+  var temp = 0;
+
+  //var inputStringLength = inputString.length;
+
+
+  for ( var i=0; i < inputString.length; i++ ) {
+
+    if ( charCount.hasOwnProperty(inputString.charAt(i)) ) {
+      temp = charCount[inputString.charAt(i)];
+      temp++;
+    } else {
+      temp = 1;
+    }
+
+    charCount[inputString.charAt(i)] = temp;
+
+  }
+
+/*
+  for ( c in charCount ) {
+    
+    outputString += c + " " + charCount[c] + "\n";
+  }
+*/
+
+  // make alphabetical array of "keys" and sort
+  var alphaKeys = new Array();
+  for ( c in charCount ) {
+    alphaKeys.push(c);
+    //alphaKeys.push(charCount[c]);
+  }
+  alphaKeys.sort();
+
+
+  for ( var x=0; x< alphaKeys.length; x++ ) {
+    
+    var key = alphaKeys[x];
+    var keyPrint = key;
+    if ( key == "\n" ) { 
+       keyPrint = "NEWLINE"; 
+    } else if ( key == " " ) { 
+       keyPrint = "SPACE"; 
+    }
+    outputString += keyPrint + " " + charCount[key] + ", \n";
+  }
+
+
+  document.charNGramForm.detailsArea.value = outputString;
+
+}
+
+
+
+
+
+
+    // unigram
+    if ( false ) {
+      randomIndex = Math.floor(Math.random()*arrayLength);
+      outputString += inputString.charAt(randomIndex);
+
+
+    // supposed to be n-gram.  something is wrong, though
+    } else if (false) {
+
+      randomIndex = Math.floor(Math.random()*arrayLength);
+
+      // starting from random index, look for next instance that has the prior substring
+      var nextIndex = inputString.indexOf(priorSubstring, randomIndex);
+      if ( nextIndex != -1 ) {
+
+        //toAdd = inputString.charAt(nextIndex+1) + "(nextIndex: " + nextIndex + " random index " + randomIndex + " prior substring " + priorSubstring + ")";
+        toAdd = inputString.charAt(nextIndex+1) ;
+
+        var startingPriorSubstring = nextIndex-priorChars+1;
+        var endingPriorSubstring = nextIndex;
+        priorSubstring += inputString.charAt(nextIndex+1);
+        priorSubstring = priorSubstring.substring(1,priorSubstring.length);
+        //toAdd += "( " + priorSubstring + " ) ";
+        //toAdd += "( " +  startingPriorSubstring + " , " + endingPriorSubstring + " )";
+
+      } else {
+         nextIndex = inputString.indexOf(priorSubstring);
+         if ( nextIndex == -1 ) {
+            toAdd = "";
+         } else {
+            toAdd = inputString.charAt( nextIndex+1);
+            //toAdd = inputString.substr( nextIndex+1, 1);
+            //priorSubstring = inputString.substr(nextIndex-priorChars+1, priorChars);
+            var startingPriorSubstring = nextIndex-priorChars+1;
+            var endingPriorSubstring = nextIndex+priorChars;
+
+            toAdd += "( " +  startingPriorSubstring + " , " + endingPriorSubstring + " )";
+            priorSubstring = inputString.substring( startingPriorSubstring, endingPriorSubstring );
+
+            //priorSubstring = inputString.substr( startingPriorSubstring, endingPriorSubstring );
+            //priorSubstring = inputString.substr( startingPriorSubstring, startingPriorSubstring+priorChars );
+         }
+      }
+
+      //outputString = toAdd + outputString ;
+      //outputString += toAdd + "\n";
+      outputString += toAdd;
+
+
+    // straight bigram
+    } else if (false) {
+
+      randomIndex = Math.floor(Math.random()*arrayLength);
+
+      // starting from random index, look for next instance that has the prior substring
+      var nextIndex = inputString.indexOf(priorSubstring, randomIndex);
+
+      detailsString += "char number: " + x + "\n previous context: '" + priorSubstring + "' \n";
+      detailsString += " starting from index: " + randomIndex + ", found index: " + nextIndex + "\n";
+
+      if ( nextIndex != -1 ) {
+
+         detailsString += " skipping over: '" + inputString.substring(randomIndex, nextIndex) + "'\n";
+
+         toAdd =  inputString.charAt(nextIndex+1);
+         detailsString += " next character is: '" + toAdd + "'\n";
+
+         priorSubstring = inputString.charAt(nextIndex+1);
+         detailsString += " previous context is now: '" + priorSubstring + "'\n";
+
+      } else {
+
+         detailsString += " UNABLE TO FIND following substring\n";
+         detailsString += " previous context is now: '" + priorSubstring + "'\n";
+         toAdd =  "";
+
+      }
+
+      outputString += toAdd;
+
+
+    // straight trigram
+    } else if (false) {
+
+      randomIndex = Math.floor(Math.random()*arrayLength);
+
+      // starting from random index, look for next instance that has the prior substring
+      var nextIndex = inputString.indexOf(priorSubstring, randomIndex);
+
+      detailsString += "char number: " + x + "\n previous context: '" + priorSubstring + "' \n";
+      detailsString += " starting from index: " + randomIndex + ", found index: " + nextIndex + "\n";
+
+      if ( nextIndex != -1 ) {
+
+         detailsString += " skipping over: '" + inputString.substring(randomIndex, nextIndex) + "' to '" + priorSubstring +  "'\n";
+
+         toAdd =  inputString.charAt(nextIndex+2);
+         detailsString += " next character is: '" + toAdd + "' - outputting\n";
+
+	 //priorSubstring = inputString.charAt(nextIndex);
+         //priorSubstring += inputString.charAt(nextIndex+1);
+
+	 priorSubstring = inputString.charAt(nextIndex+1);
+         priorSubstring += inputString.charAt(nextIndex+2);
+
+         //priorSubstring = inputString.charAt(nextIndex+1);
+         detailsString += " previous context is now: '" + priorSubstring + "'\n";
+
+      } else {
+
+         detailsString += " UNABLE TO FIND following substring\n";
+         detailsString += " previous context is now: '" + priorSubstring + "'\n";
+         toAdd =  "";
+
+      }
+
+      outputString += toAdd;
+
+    // straight 4-gram
+    } else if (false) {
+
+      randomIndex = Math.floor(Math.random()*arrayLength);
+
+      // starting from random index, look for next instance that has the prior substring
+      var nextIndex = inputString.indexOf(priorSubstring, randomIndex);
+
+      detailsString += "char number: " + x + "\n previous context: '" + priorSubstring + "' \n";
+      detailsString += " starting from index: " + randomIndex + ", found index: " + nextIndex + "\n";
+
+      if ( nextIndex != -1 ) {
+
+         detailsString += " skipping over: '" + inputString.substring(randomIndex, nextIndex) + "' to '" + priorSubstring +  "'\n";
+
+         toAdd =  inputString.charAt(nextIndex+3);
+         detailsString += " next character is: '" + toAdd + "' - outputting\n";
+
+	 //priorSubstring = inputString.charAt(nextIndex);
+         //priorSubstring += inputString.charAt(nextIndex+1);
+
+	 priorSubstring = inputString.charAt(nextIndex+1);
+         priorSubstring += inputString.charAt(nextIndex+2);
+         priorSubstring += inputString.charAt(nextIndex+3);
+
+         //priorSubstring = inputString.charAt(nextIndex+1);
+         detailsString += " previous context is now: '" + priorSubstring + "'\n";
+
+      } else {
+
+         detailsString += " UNABLE TO FIND following substring\n";
+         detailsString += " previous context is now: '" + priorSubstring + "'\n";
+         toAdd =  "";
+      }
+
+
+      var number = Math.floor(Math.random()*60);
+      if ( number == 1 ) {
+         outputString += "\n";
+      }
+
+      outputString += toAdd;
+
+    // straight 5-gram
+    } else if (false) {
+
+      randomIndex = Math.floor(Math.random()*arrayLength);
+
+      // starting from random index, look for next instance that has the prior substring
+      var nextIndex = inputString.indexOf(priorSubstring, randomIndex);
+
+      if ( debug == "true") {
+         detailsString += "char number: " + x + "\n previous context: '" + priorSubstring + "' \n";
+         detailsString += " starting from index: " + randomIndex + ", found index: " + nextIndex + "\n";
+      }
+
+      if ( nextIndex != -1 ) {
+
+
+         toAdd =  inputString.charAt(nextIndex+4);
+
+         if ( debug == "true") {
+            detailsString += " skipping over: '" + inputString.substring(randomIndex, nextIndex) + "' to '" + priorSubstring +  "'\n";
+            detailsString += " next character is: '" + toAdd + "' - outputting\n";
+         }
+
+	 priorSubstring = inputString.charAt(nextIndex+1);
+         priorSubstring += inputString.charAt(nextIndex+2);
+         priorSubstring += inputString.charAt(nextIndex+3);
+         priorSubstring += inputString.charAt(nextIndex+4);
+
+         if ( debug == "true") {
+            detailsString += " previous context is now: '" + priorSubstring + "'\n";
+         }
+
+      } else {
+
+         detailsString += " UNABLE TO FIND following substring\n";
+         detailsString += " previous context is now: '" + priorSubstring + "'\n";
+         toAdd =  "";
+      }
+
+      outputString += toAdd;
+
+      if ( toAddNewline == "true" && toAdd == " " ) {
+         outputString += "\n";
+
+         toAddNewline = "false";
+      }
+
+
+      var number = Math.floor(Math.random()*60);
+      if ( number == 1 ) {
+         toAddNewline = "true";
+      }

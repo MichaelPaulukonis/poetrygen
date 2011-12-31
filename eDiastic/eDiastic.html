@@ -1,0 +1,401 @@
+<html>
+<head>
+<title>eDiastic: Poetry Generation using a Diastic Reading technique</title>
+
+
+<script language="JavaScript" type="text/javascript">
+
+//  Last updated: August 22, 2011.
+
+/*
+    Copyright 2011 Edde Addad
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+function diasticReading() {
+
+
+  // get title phrase and input text
+  var titlePhrase = document.eDiasticForm.titlePhrase.value;
+  var inputText = document.eDiasticForm.input.value;
+
+  // remove punctuation, get rid of extra spaces, and split into array
+  // titlePhrase is the 'seed text'
+  titlePhrase = titlePhrase.replace(/'/g, "");
+  titlePhrase = titlePhrase.replace(/[^a-zA-Z0-9_ ]/g, " ");
+  titlePhrase = titlePhrase.replace(/ +/g, " ");
+  var aTitlePhrase = titlePhrase.split(" ");
+
+  // inputText is the 'corpus text'
+  inputText = inputText.replace(/\s'/g, "");
+  inputText = inputText.replace(/'\s/g, "");
+  inputText = inputText.replace(/^'/g, "");
+  inputText = inputText.replace(/'$/g, "");
+  inputText = inputText.replace(/[^a-zA-Z0-9_' ]/g, " ");
+  inputText = inputText.replace(/ +/g, " ");
+  var aInputText = inputText.split(" ");
+
+
+
+  // parameters
+  var newlinesAtUnfoundWords = false;  
+  var newlinesAfterEachTitleWords = false;  
+  var cycleThroughText = false;   
+  var considerCase = true;   
+
+  if ( document.eDiasticForm.afterTitlePhraseWord.checked ) {
+    newlinesAfterEachTitleWords = true;  
+  }
+
+  if ( document.eDiasticForm.afterUnfoundCharacter.checked ) {
+    newlinesAtUnfoundWords = true;   
+  }
+
+
+  // parameter: whether to cycle through or not
+  var iterationIndex = document.eDiasticForm.iteration.selectedIndex;
+  if ( document.eDiasticForm.iteration.options[iterationIndex].value == "cycleThrough" ) {
+    cycleThroughText = true;
+  }
+
+  // parameter: whether to match for case or not
+  var caseIndex = document.eDiasticForm.caseConsider.selectedIndex;
+  if ( document.eDiasticForm.caseConsider.options[caseIndex].value == "notConsidering" ) {
+    considerCase = false;
+  }
+
+  // parameter: what characters to match (any, vowels, etc...)
+  var charactersToMatchIndex = document.eDiasticForm.toMatch.selectedIndex;
+  var charactersToMatch = document.eDiasticForm.toMatch.options[charactersToMatchIndex].value;
+
+
+  // parameter: whether to capitalize only seed characters or not
+  var capitalizeStyleIndex = document.eDiasticForm.capitalizeStyle.selectedIndex;
+  var capitalizeStyle = document.eDiasticForm.capitalizeStyle.options[capitalizeStyleIndex].value;
+
+
+  // parameter: whether to add seed words in output or not
+  var addingSeedWordsIndex = document.eDiasticForm.addingSeedWords.selectedIndex;
+  var addingSeedWords = document.eDiasticForm.addingSeedWords.options[addingSeedWordsIndex].value;
+
+
+  var directionSelected = document.eDiasticForm.direction.selectedIndex;
+  if ( document.eDiasticForm.direction.options[directionSelected].value == "backward" ) {
+
+    // there's probably a better way to do this...
+    var aTempArray = aInputText.slice();
+
+    var z=0;
+    for ( var i=aInputText.length-1; i>=0; i-- ) {
+      aInputText[i] = aTempArray[z];
+      z++;
+    }
+  }
+
+  if ( document.eDiasticForm.direction.options[directionSelected].value == "random" ) {
+
+    // there's probably a better way to do this...
+    var arrayLength = aInputText.length;
+
+    for ( var i=0; i<arrayLength; i++ ) {
+      var randomIndex = Math.floor(Math.random()*arrayLength);
+      var tempWord = aInputText[i];
+      aInputText[i] = aInputText[randomIndex];
+      aInputText[randomIndex] = tempWord;
+    }
+
+    // DEBUG
+    //    for ( var i=0; i<arrayLength; i++ ) {
+    //     toDisplay += "|" + aInputText[i] + "|";
+    //  }
+    //  toDisplay += "\n";
+
+  }
+
+
+  // consider each character in the title phrase, and that character's position in the title phrase.
+  // look through the Input Text Array for the next word that has the same character in the same position.
+  // if you don't find it, then skip that character
+  var arrayIndex = 0;
+  var startingArrayIndex = 0;
+  var toDisplay = "";
+
+  for ( var w=0; w<aTitlePhrase.length; w++ ) {
+
+    // get next word
+    var currentTitleWord = aTitlePhrase[w];
+
+    if ( addingSeedWords == "adding" && currentTitleWord != "" ) {
+       toDisplay += currentTitleWord + ":\t";
+    }
+
+    // for each character in the title phrase word, find a word in the input text
+    for ( var pos=0; pos<currentTitleWord.length; pos++ ) {
+
+	// get the next character
+	var currentTitleChar = currentTitleWord.charAt(pos);
+
+        if ( isCharacterOfInterest( currentTitleChar, charactersToMatch ) ) {
+
+	    var startingArrayIndex = arrayIndex;
+	    var finishedWithChar = false;
+
+	    while ( ! finishedWithChar ) {
+
+	      var currentArrayWord = aInputText[arrayIndex]
+
+              var inputTextCharToConsider = currentArrayWord.charAt(pos);
+              var titleWordCharToConsider = currentTitleChar;
+
+              if ( ! considerCase ) {
+                inputTextCharToConsider = inputTextCharToConsider.toLowerCase();
+                titleWordCharToConsider = titleWordCharToConsider.toLowerCase();
+              }
+
+	      if ( inputTextCharToConsider == titleWordCharToConsider ) {
+    
+                var foundWord = aInputText[arrayIndex];
+
+                // punctuate seed text characters
+                if ( capitalizeStyle == "highlightSeed" ) {
+                   foundWord = foundWord.substr(0,pos).toLowerCase() + titleWordCharToConsider.toUpperCase() + foundWord.substr(pos+1).toLowerCase();
+                } else if ( capitalizeStyle == "none" ) {
+                   foundWord = foundWord.toLowerCase();
+                }
+ 
+    		toDisplay += foundWord + " ";
+    
+                //toDisplay += "(" + currentTitleWord + ")";
+		finishedWithChar = true;
+	      }
+
+	      if ( arrayIndex == aInputText.length -1 ) {
+		if ( cycleThroughText ) {
+		  arrayIndex = 0;
+		} else {
+		  printText( toDisplay );
+		  return;
+		}
+
+	      } else {
+		arrayIndex++;
+	      }
+
+	      // if we've gone through the whole corpus and not found a match, then skip it
+	      if ( arrayIndex == startingArrayIndex ) {
+		finishedWithChar = true;
+		if ( newlinesAtUnfoundWords ) {
+		  toDisplay +=  " \n";    
+		}
+	      }
+	    }
+        }
+
+    }
+    if ( newlinesAfterEachTitleWords ) {
+      toDisplay +=  " \n";    
+    }
+
+  }
+
+  printText( toDisplay );
+}
+
+function isCharacterOfInterest( currentTitleChar, charactersToMatch ) {
+
+  currentTitleChar = currentTitleChar.toLowerCase();
+
+  if ( charactersToMatch == "vowels" ) {
+    if ( currentTitleChar == "a" || currentTitleChar == "e" || currentTitleChar == "i" || currentTitleChar == "o" || currentTitleChar == "u" ) {
+      return true;
+    } else {
+      return false;
+    }
+  } else if ( charactersToMatch == "withApproximants" ) {
+    if ( currentTitleChar == "a" || currentTitleChar == "e" || currentTitleChar == "i" || currentTitleChar == "o" || currentTitleChar == "u" 
+         || currentTitleChar == "l" || currentTitleChar == "r" || currentTitleChar == "w" || currentTitleChar == "y" ) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+  return true;
+}
+
+function printText( toDisplay ) {
+
+  var appendTo = false;
+
+  var outputStyleIndex = document.eDiasticForm.outputStyle.selectedIndex;
+  if ( document.eDiasticForm.outputStyle.options[outputStyleIndex].value == "appendTo" ) {
+      document.eDiasticForm.output.value += toDisplay;
+    } else {
+      document.eDiasticForm.output.value = toDisplay;
+    }
+
+}
+
+function clearAll() {
+  document.eDiasticForm.titlePhrase.value = "";
+  document.eDiasticForm.input.value = "";
+  document.eDiasticForm.output.value = "";
+}
+
+</script>
+
+</head>
+<body>
+
+<h3>eDiastic</h3>
+
+<p style="color:grey">Analogous to <em>acrostic</em>.  Based on Jackson Mac Low's "diastic technique" as described by Charles Hartman in <em>Virtual Muse: Experiments In Computer Poetry</em> pgs. 95-96.  
+
+<form name="eDiasticForm">
+
+<table border="0" cellspacing="20">
+<tr valign="top">
+<td>
+<p>Input Text:<br>
+<textarea rows="3" cols="60" name="input">
+My heart aches, and a drowsy numbness pains
+   My sense, as though of hemlock I had drunk,
+Or emptied some dull opiate to the drains
+   One minute past, and Lethe-wards had sunk:
+'Tis not through envy of thy happy lot,
+   But being too happy in thine happiness, -
+      That thou, light-winged Dryad of the trees,
+         In some melodious plot
+   Of beechen green, and shadows numberless,
+      Singest of summer in full-throated ease.
+
+O, for a draught of vintage! that hath been
+   Cool'd a long age in the deep-delved earth,
+Tasting of Flora and the country green,
+   Dance, and Provencal song, and sunburnt mirth!
+O for a beaker full of the warm South,
+   Full of the true, the blushful Hippocrene,
+      With beaded bubbles winking at the brim,
+         And purple-stained mouth;
+   That I might drink, and leave the world unseen,
+      And with thee fade away into the forest dim:
+
+   Fade far away, dissolve, and quite forget
+What thou among the leaves hast never known,
+The weariness, the fever, and the fret
+   Here, where men sit and hear each other groan;
+Where palsy shakes a few, sad, last gray hairs,
+   Where youth grows pale, and spectre-thin, and dies;
+      Where but to think is to be full of sorrow
+         And leaden-eyed despairs,
+   Where Beauty cannot keep her lustrous eyes,
+      Or new Love pine at them beyond to-morrow.
+
+Away! away! for I will fly to thee,
+   Not charioted by Bacchus and his pards,
+But on the viewless wings of Poesy,
+   Though the dull brain perplexes and retards:
+Already with thee! tender is the night,
+   And haply the Queen-Moon is on her throne,
+      Cluster'd around by all her starry Fays;
+         But here there is no light,
+   Save what from heaven is with the breezes blown
+      Through verdurous glooms and winding mossy ways.
+
+I cannot see what flowers are at my feet,
+   Nor what soft incense hangs upon the boughs,
+But, in embalmed darkness, guess each sweet
+   Wherewith the seasonable month endows
+The grass, the thicket, and the fruit-tree wild;
+   White hawthorn, and the pastoral eglantine;
+      Fast fading violets cover'd up in leaves;
+         And mid-May's eldest child,
+   The coming musk-rose, full of dewy wine,
+      The murmurous haunt of flies on summer eves.
+
+Darkling I listen; and, for many a time
+   I have been half in love with easeful Death,
+Call'd him soft names in many a mused rhyme,
+   To take into the air my quiet breath;
+Now more than ever seems it rich to die,
+   To cease upon the midnight with no pain,
+      While thou art pouring forth thy soul abroad
+         In such an ecstasy!
+   Still wouldst thou sing, and I have ears in vain -
+      To thy high requiem become a sod.
+
+Thou wast not born for death, immortal Bird!
+   No hungry generations tread thee down;
+The voice I hear this passing night was heard
+   In ancient days by emperor and clown:
+Perhaps the self-same song that found a path
+   Through the sad heart of Ruth, when, sick for home,
+      She stood in tears amid the alien corn;
+         The same that oft-times hath
+   Charm'd magic casements, opening on the foam
+      Of perilous seas, in faery lands forlorn.
+
+Forlorn! the very word is like a bell
+   To toll me back from thee to my sole self!
+Adieu! the fancy cannot cheat so well
+   As she is fam'd to do, deceiving elf.
+Adieu! adieu! thy plaintive anthem fades
+   Past the near meadows, over the still stream,
+      Up the hill-side; and now 'tis buried deep
+         In the next valley-glades:
+   Was it a vision, or a waking dream?
+      Fled is that music: - Do I wake or sleep?
+</textarea>
+
+<p>Seed Text:<br>
+<textarea rows="2" cols="60" name="titlePhrase">All my life I've been considered as the worst.
+</textarea>
+
+<p><input type="button" style="background-color:#FF9999" value="Generate Diastic" onClick="diasticReading()"> 
+<br>&nbsp; reading in a <select name="direction"><option value="forward">forward direction<option value="backward">backward direction<option selected value="random">random order</select> through the Input Text
+<br>&nbsp; <select name="iteration"><option selected value="cycleThrough">cycling<option value="once">reading once</select> through the Input Text
+
+<p>&nbsp; matching by <select name="toMatch"><option selected value="any">all characters<option value="vowels">vowels only<option value="withApproximants">vowels and approximants</select> in the Seed Text
+<br>&nbsp; <select name="caseConsider"><option selected value="considering">considering<option value="notConsidering">not considering</select> upper/lower-case differences when matching
+
+<p>&nbsp;  <select name="addingSeedWords"><option selected value="notAdding">not adding<option value="adding">adding</select> Seed Text words to the output
+<br>&nbsp; capitalizing <select name="capitalizeStyle"><option selected value="asInput">as Input Text<option value="highlightSeed">Seed Text characters<option value="none">none of the words</select>
+<br>&nbsp; adding newlines <input type="checkbox" name="afterTitlePhraseWord" checked="checked"> after every word in the Seed Text and/or <input type="checkbox" name="afterUnfoundCharacter"> for every unfound character
+<br>&nbsp; <select name="outputStyle"><option value="appendTo">appending to<option selected value="replace">replacing</select> the Output Text.
+<p>To start over, you may want to <a href="javascript:clearAll()">Clear All</a> the Text areas.
+
+
+</td>
+<td>
+<p>Output Text:<br>
+<textarea rows="25" cols="80" name="output">
+</textarea>
+
+</td>
+</tr>
+</table>
+
+</form>
+
+<p style="margin-left:10%;margin-right:20%"><span style="color:grey">"In an endnote to [<em>The Virginia Woolf Poems</em>], Jackson [Mac Low] explained the "diastic" or "spelling-through" technique he had used in writing the poems.  The process began with a striking phrase from Virginia Woolf's <em>The Waves</em>: "ridiculous in Picadilly."</span> He reread the novel, looking for the first word that, like "ridiculous," began with an r; then read the next word following that had (like "ridiculous") i as its second letter; then the next whose third letter was d; and so on until he had "spelled through" the whole phrase.  <span style="color:grey">(There were other rules for line breaks, punctuation, and so on.)  The resulting text would be made entirely out of Woolf's words but would have none of the usual English syntax."
+ - Charles O. Hartman, <em>Virtual Muse: experiments in computer poetry</em></span>
+
+
+<p style="text-align:center;color:grey;margin-left:10%;margin-right:20%">Default input text from "Ode to a Nightingale" by John Keats; default seed text from "Suicidal Thoughts" by The Notorious B.I.G.
+<br>Hecho por: <a style="color:black" href="http://www.eddeaddad.net/">edde addad</a>.  
+<br>It's client-side JavaScript... <a style="color:black" href="COPYING.txt">GPL</a>ed!  Shouts: eRoGK7, Elshtain, Matthew, suchaswitch.  See <a style="color:black" href="http://gnoetrydaily.wordpress.com/2011/02/15/sketch-ediastic/">implementation notes</a> on Gnoetry Daily.
+
+</body>
+</html>
