@@ -1,0 +1,816 @@
+<html>
+<head>
+
+<script language="JavaScript" type="text/javascript">
+
+//  Last updated: Feb. 18, 2011.
+
+/*
+    Copyright 2011 Edde Addad
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+
+// this needs to be part of a frameset, this frame named "controlForm" and another frame named "editor"
+
+
+  function printMixture() {
+
+      // parameter: whether to sort alphabetically or not in selector
+      var selectAlphabetical = false;
+      var selectIndex = document.controlForm.selectStyle.selectedIndex;
+      if ( document.controlForm.selectStyle.options[selectIndex].value == "alphabetical" ) {
+        selectAlphabetical = true;
+      }
+
+      // parameter: whether to use template, language, or both texts
+      var languageUseIndex = document.controlForm.languageUse.selectedIndex;
+      var languageUse = document.controlForm.languageUse.options[languageUseIndex].value;
+
+      // parameter: how to decide which is selected
+      var initialSelectedIndex = document.controlForm.initialSelected.selectedIndex;
+      var initialSelected = document.controlForm.initialSelected.options[initialSelectedIndex].value;
+
+
+      // parameter: which text to constrain
+      var toConstrainIndex = document.controlForm.toConstrain.selectedIndex;
+      var toConstrain = document.controlForm.toConstrain.options[toConstrainIndex].value;
+
+      // parameter: whether to constrain case-sensitive
+      var considerCaseInConstraint = false;
+      var considerCaseInConstraintIndex = document.controlForm.considerCaseInConstraint.selectedIndex;
+      if ( document.controlForm.considerCaseInConstraint.options[considerCaseInConstraintIndex].value == "caseSensitive" ) {
+         considerCaseInConstraint = true;
+      }
+
+      // parameter: size of select input
+      var selectSizeIndex = document.controlForm.selectSize.selectedIndex;
+      var selectSize = document.controlForm.selectSize.options[selectSizeIndex].value;
+
+
+      // get the Template Text data
+      var templateText = parent.control.document.controlForm.templateText.value;
+      templateText = editString(templateText);
+      var aTemplateText = templateText.split(" ");
+
+      // get the Select Text data
+      var aSelectText = new Array();
+
+      if ( languageUse == "both" ) {
+         var bothText = templateText + " " + parent.control.document.controlForm.additionalText.value;
+         bothText = editString(bothText);
+         aSelectText = bothText.split(" ");
+
+      } else if ( languageUse == "template" ) {
+         aSelectText = aTemplateText.slice();
+
+      } else if ( languageUse == "additional" || languageUse == "originalAndInput") {
+         var additionalText = parent.control.document.controlForm.additionalText.value;
+         additionalText = editString(additionalText);
+         aSelectText = additionalText.split(" ");
+      }
+
+
+      // get the Constraint Words data
+      var constraintText = parent.control.document.controlForm.stopWords.value;
+      constraintText = editString(constraintText);
+      var aConstraintWords = constraintText.split(" ");
+
+      // make constraint words hashtable
+      var hConstraintWords = new Array();
+      for ( var i=0; i<aConstraintWords.length; i++ ) {
+          var tempWord = aConstraintWords[i];
+          if ( ! considerCaseInConstraint ) { 
+             tempWord = tempWord.toLowerCase();
+          }
+          hConstraintWords[ tempWord ]++;
+      }
+
+      if ( toConstrain == "both" ) {
+	  // remove constraint words from select text
+	  for ( var i=aSelectText.length-1; i>=0 ;i-- ) {
+	      var tempWord = aSelectText[i];
+              if ( ! considerCaseInConstraint ) { 
+                 tempWord = tempWord.toLowerCase();
+              }    
+	      if ( hConstraintWords[ tempWord ] != null ) {
+		aSelectText.splice(i, 1);
+	      }
+	  }
+      }
+
+      // if you want to see the select options sorted alphabetically...
+      var aInputTextAlph = new Array();
+      var hInputTextAlph = new Array();
+
+      if ( selectAlphabetical ) {
+         // make hashtable of input text
+         for ( var i=0; i<aSelectText.length; i++ ) {
+            tempWord = aSelectText[i];
+            hInputTextAlph[ tempWord ] = tempWord;
+         }
+
+         // get all elements of hashtable and sort
+         for ( var i in hInputTextAlph ) {
+            var tempWord = hInputTextAlph[i];
+            aInputTextAlph.push( tempWord );
+         }
+         aInputTextAlph.sort();
+
+         aSelectText = aInputTextAlph;
+      }
+
+    
+      parent.editor.document.open();
+
+      parent.editor.document.write("<html>\n<body>\n");
+
+      latestId=0;
+      for ( var i=0; i<aTemplateText.length; i++ ) {
+         var theWord = aTemplateText[i];
+
+         if ( theWord == "\r" || theWord == "\n" ) {
+            theWord = "<P>";
+         }
+
+         parent.editor.document.write( getSelectString(theWord, aSelectText, hConstraintWords, latestId, considerCaseInConstraint, selectSize, languageUse) );
+         latestId++;
+      }
+
+      parent.editor.document.write("</body>\n</html>\n");
+      parent.editor.document.close();
+
+      // focus the appropriate item
+      setSelected( initialSelected );
+  }
+
+
+  // edit the string being received from an HTML form
+  function editString( inputText ) {
+
+      //inputText = inputText.replace(/\"/g, "");    // gets rid of the " - don't feel like handling it
+      inputText = inputText.replace(/"/g, " \" ");
+
+      inputText = inputText.replace(/([^a-zA-Z0-9_ \n\r'])/g, " $1");
+      inputText = inputText.replace(/\r/g, " \r ");
+      inputText = inputText.replace(/\n/g, " \n ");
+      inputText = inputText.replace(/ +/g, " ");
+      inputText = inputText.replace(/^ /g, "");
+      inputText = inputText.replace(/ $/g, "");
+
+      return inputText;
+  }
+
+
+  // return the HTML for a <SELECT>
+  function getSelectString( selectedString, aOptions, hConstraintWords, latestId, considerCaseInConstraint, selectSize, languageUse ) {
+      var toReturn = "";
+
+      // if it's a paragraph markup, add id and print it
+      if ( selectedString == "<P>" ) {
+          toReturn = "<P id='w"+ latestId +"'>";
+          return toReturn;
+      }
+
+      // if it's non-alphanumeric, print it
+      if ( selectedString.match( /([^a-zA-Z0-9_ \n\r'])/ ) ) {
+          toReturn = "\n<span style='font-size:200%' id='w"+ latestId +"'> " + selectedString + " </span>";
+          return toReturn;
+      }
+
+      // if it's one of the constraint words, print it
+      var selectedStringToCompare = selectedString;
+     if ( ! considerCaseInConstraint ) {
+        selectedStringToCompare = selectedString.toLowerCase();
+      }
+      if ( hConstraintWords[ selectedStringToCompare ] != null ) {
+          toReturn = "\n<span style='font-size:150%' id='w"+ latestId +"'> " + selectedString + " </span>";
+          return toReturn;
+      }
+
+      toReturn = toReturn + "\n<select size='" + selectSize + "' id='w"+ latestId+"'>";
+
+      if ( languageUse == "originalAndInput" ) {
+            toReturn = toReturn + "<option selected ";
+
+            var valueToken = selectedString;
+            var theToken = selectedString;
+	    valueToken = valueToken.replace(/'/g, "APOSTROPHE");
+	    valueToken = valueToken.replace(/"/g, "QUOTATIONMARK");  // handles "
+
+	    toReturn = toReturn + "value='" + valueToken+ "'>" + theToken;
+      }
+
+      for ( var i=0; i<aOptions.length; i++ ) {
+ 	  
+             var theToken = aOptions[i];
+
+             if ( theToken == "\n" ) {
+                // ignore newline for now
+
+             } else {
+
+                toReturn = toReturn + "<option ";
+                if ( theToken == selectedString ) {
+                     toReturn = toReturn + "selected ";
+                }
+                var valueToken = theToken;
+                valueToken = valueToken.replace(/'/g, "APOSTROPHE");
+                valueToken = valueToken.replace(/"/g, "QUOTATIONMARK");  // handles "
+                toReturn = toReturn + "value='" + valueToken+ "'>" + theToken;
+             }
+      }
+
+      toReturn += "<option value='[REMOVE]'>[REMOVE]";
+
+      toReturn += "</select> ";
+      toReturn += "<input type='checkbox' name='afterTitlePhraseWord' id='s"+ latestId+"' checked='checked'>\n";
+
+
+      return toReturn;
+  }
+
+
+function clearConstraint() {
+  parent.control.document.controlForm.stopWords.value = "";
+}
+
+function clearInput() {
+  parent.control.document.controlForm.additionalText.value = "";
+}
+
+function copyTemplate() {
+  parent.control.document.controlForm.stopWords.value =  parent.control.document.controlForm.templateText.value;
+}
+
+
+function setClosedClass() {
+  var manyClosedClassWords = "a aboard about above absent across afore after against all along alongside although amid amidst among amongst an and another any anybody anyone anything apropos around as aside astride at athwart atop barring because before behind below beneath beside besides between betwixt beyond both but by certain circa concerning despite down during each either enough even every everybody everyone everything except excluding failing few fewer fewest following for from given he her hers herself him himself his I if in including inside into it its itself last least like little long many me mid midst mine minus more most much my myself near neither next no nobody none nor nothing notwithstanding of off on once one onto opposite or other others our ours ourselves out outside over own pace past per plus pro qua regarding round said sans several she since so some somebody someone something such sufficient than that their theirs them themselves then these they thine this those though through throughout thru till times to toward towards under underneath unless unlike until up upon us various versus via we what whatever when whenever wherever whether which whichever while who whoever whom whomever whose with within without worth yetafter you your yours yourself yourselves";
+
+  parent.control.document.controlForm.stopWords.value += " " +  manyClosedClassWords;
+  parent.control.document.controlForm.stopWords.focus();
+}
+
+
+function setSelected( initialSelected ) {
+
+  var i = 0;
+  var oElement = parent.editor.document.getElementById('w0');
+  var prevWord = "";
+
+  // keep looping until you find a null element
+  while ( oElement != null ) {
+
+    if ( oElement.nodeName == "SELECT" ) {
+
+       var selectedWordIndex = oElement.selectedIndex;
+
+       if ( initialSelected == "random" ) {
+          var size = oElement.options.length;
+          selectedWordIndex = Math.floor(Math.random()*size);
+       }
+
+       oElement.selectedIndex = selectedWordIndex;
+       //oElement.focus();
+
+       prevWord = oElement.options[selectedWordIndex].value;
+    }
+
+    i++;
+    currentId = "w" + i;
+    oElement = parent.editor.document.getElementById(currentId);
+  }
+}
+
+// randomly change selections
+function randomizeChecklisted() {
+
+  var i = 0;
+  var oElement = parent.editor.document.getElementById('w0');
+  var pElement = parent.editor.document.getElementById('s0');
+
+  // keep looping until you find a null element
+  while ( oElement != null ) {
+
+    if ( pElement != null && pElement.nodeName == "INPUT" ) {
+
+       if ( pElement.checked ) {
+          var size = oElement.options.length;
+          selectedWordIndex = Math.floor(Math.random()*size);
+          oElement.selectedIndex = selectedWordIndex;
+       }
+    }
+
+    i++;
+    currentId = "w" + i;
+    currentId2 = "s" + i;
+    oElement = parent.editor.document.getElementById(currentId);
+    pElement = parent.editor.document.getElementById(currentId2);
+  }
+}
+
+
+function seekBigram( prevWord, aSelectText, aCorpusText ) {
+
+  if ( prevWord != "" ) {
+
+     var size = aCorpusText.length;
+     var startingPos = Math.floor(Math.random()*size); 
+     var currentPos = startingPos;
+     var foundPrevious = false;
+     var finished = false;
+
+     while ( ! finished ) {
+
+        if ( foundPrevious == true ) {
+
+           // word we want is: aCorpusText[ currentPos ]
+           for ( var i=0; i<aSelectText.length; i++ ) {
+              if ( aSelectText[ i ] == aCorpusText[currentPos ] ) {
+                return aSelectText[ i ];
+              }
+           }
+           finished = true;
+        }
+
+        if ( aCorpusText[ currentPos ] == prevWord ) {
+           foundPrevious = true;
+        }
+
+
+        if ( currentPos == size ) {
+           currentPos = 0;
+        } else {
+           currentPos++;
+        }
+
+        if ( currentPos == startingPos ) {
+           finished = true;
+        }
+     }
+  }
+
+  // if a bigram not found, or if prev word is "", then return random
+  var size = aSelectText.length;
+  return Math.floor(Math.random()*size);  
+
+}
+
+
+
+
+// select all checklisted
+function setChecklistedAll() {
+
+  var i = 0;
+  var oElement = parent.editor.document.getElementById('w0');
+  var pElement = parent.editor.document.getElementById('s0');
+
+  // keep looping until you find a null element
+  while ( oElement != null ) {
+
+    if ( pElement != null && pElement.nodeName == "INPUT" ) {
+
+       pElement.checked = true;
+    }
+
+    i++;
+    currentId = "w" + i;
+    currentId2 = "s" + i;
+    oElement = parent.editor.document.getElementById(currentId);
+    pElement = parent.editor.document.getElementById(currentId2);
+  }
+}
+
+
+// select none checklisted
+function setChecklistedNone() {
+
+  var i = 0;
+  var oElement = parent.editor.document.getElementById('w0');
+  var pElement = parent.editor.document.getElementById('s0');
+
+  // keep looping until you find a null element
+  while ( oElement != null ) {
+
+    if ( pElement != null && pElement.nodeName == "INPUT" ) {
+
+       pElement.checked = false;
+    }
+
+    i++;
+    currentId = "w" + i;
+    currentId2 = "s" + i;
+    oElement = parent.editor.document.getElementById(currentId);
+    pElement = parent.editor.document.getElementById(currentId2);
+  }
+}
+
+
+function exportText() {
+
+  var toPrint = "";
+  var i = 0;
+  var oElement = parent.editor.document.getElementById('w0');
+
+  // keep looping until you find a null element
+  while ( oElement != null ) {
+
+    if ( oElement.nodeName == "P" ) {
+
+       toPrint += "<BR>";
+
+    } else if ( oElement.nodeName == "SELECT" ) {
+
+       var selectedWordIndex = oElement.selectedIndex;
+       var selectedText = oElement.options[selectedWordIndex].value;
+
+       if ( selectedText != "[REMOVE]" ) {
+           toPrint += selectedText + " " ;
+       } 
+
+       // toPrint += oElement.options[selectedWordIndex].value + " " ;
+    } else { // it's a text span
+       toPrint += oElement.firstChild.data;
+    }
+
+    i++;
+    currentId = "w" + i;
+    oElement = parent.editor.document.getElementById(currentId);
+  }
+
+   // remove spaces before punctuation
+
+  toPrint = toPrint.replace(/ +/g, " "); 
+
+  toPrint = toPrint.replace(/(.) ([^a-zA-Z0-9_ \n\r'<])/g, "$1$2");
+
+  toPrint = toPrint.replace(/<BR><BR>/g, "<BR>");
+
+  toPrint = toPrint.replace(/APOSTROPHE/g, "&#39;");
+  toPrint = toPrint.replace(/QUOTATIONMARK/g, "&#34;");
+
+  WpNexport = window.open('editor.html','WpNexport');
+  WpNexport.document.writeln( "<html><body>" );
+  WpNexport.document.writeln( toPrint );
+  WpNexport.document.writeln( "</body></html>" );
+  WpNexport.document.close();
+
+}
+
+function clearTemplateText() {
+  parent.control.document.controlForm.templateText.value = "";
+}
+
+function setX77() {
+  parent.control.document.controlForm.templateText.value = "x x x x x x x\nx x x x x x x";
+  parent.control.document.controlForm.stopWords.value = "";
+}
+
+function setX353() {
+  parent.control.document.controlForm.templateText.value = "x x x\nx x x x x\nx x x";
+  parent.control.document.controlForm.stopWords.value = "";
+}
+
+function setW4() {
+  parent.control.document.controlForm.templateText.value = "When x x x,\nAnd x x,\nThen x x x,\nAnd x.";
+  parent.control.document.controlForm.stopWords.value = "When And Then";
+}
+
+function setErasure() {
+  parent.control.document.controlForm.additionalText.value = "x xx xxx xxxx xxxxx xxxxxx xxxxxxx";
+  parent.control.document.controlForm.stopWords.value = "";
+  parent.control.document.controlForm.languageUse.selectedIndex = 1;
+  parent.control.document.controlForm.initialSelected.selectedIndex = 1;
+}
+
+
+</script>
+
+</head>
+
+<body>
+
+<form name="controlForm">
+
+<table border='0' cellspacing='10'>
+<tr valign='top'>
+<td>
+Template Text - <a href="javascript:clearTemplateText()">clear</a> - set <a href="javascript:setX77()">x77</a>, <a href="javascript:setX353()">x353</a>, <a href="javascript:setW4()">w4</a> <br>
+<textarea rows="2" cols="60" name="templateText">
+When I do count the clock that tells the time,
+And see the brave day sunk in hideous night;
+When I behold the violet past prime,
+And sable curls, all silvered o'er with white; 
+When lofty trees I see barren of leaves,
+Which erst from heat did canopy the herd,
+And summer's green all girded up in sheaves,
+Borne on the bier with white and bristly beard,
+Then of thy beauty do I question make,
+That thou among the wastes of time must go,
+Since sweets and beauties do themselves forsake
+And die as fast as they see others grow;
+  And nothing 'gainst Time's scythe can make defence
+  Save breed, to brave him when he takes thee hence.
+</textarea>
+</td>
+
+<td>
+Input Text - <a href="javascript:clearInput()">clear</a> - <a href="javascript:setErasure()">erasure</a><br>
+<textarea rows="2" cols="60" name="additionalText">
+I've been waiting for a guide 
+to come and take me by the hand
+Could these sensations make me feel 
+the pleasures of a normal man?
+These sensations barely interest me 
+for another day
+I've got the spirit, lose the feeling, 
+take the shock away
+It's getting faster, moving faster now, 
+it's getting out of hand
+On the tenth floor, down the backstairs, 
+it's a no man's land
+Lights are flashing, cars are crashing, 
+getting frequent now
+I've got the spirit, lose the feeling, 
+let it out somehow
+What means to you, what means to me, 
+and we will meet again
+I'm watching you, I'm watching her, 
+I'll take no pity from your friends
+Who is right, who can tell, 
+and who gives a damn right now
+Until the spirit new sensation takes hold, 
+then you know
+I've got the spirit, but lose the feeling
+Feeling, feeling, feeling, feeling, feeling, feeling, feeling.
+
+This is the room, the start of it all
+No portrait so fine, only sheets on the wall
+I've seen the nights, filled with bloodsport and pain
+And the bodies obtained, the bodies obtained
+Where will it end? Where will it end? 
+These are your friends from childhood, through youth
+Who goaded you on, demanded your proof
+Withdrawal pain is hard, it can do you right in
+So distorted and thin, distorted and thin
+Where will it end? Where will it end? 
+This the car at the edge of the road
+There's nothing disturbed, all the windows are closed
+I guess you were right, when we talked in the heat
+There's no room for the weak, no room for the weak
+Where will it end? Where will it end? 
+This is the room the start of it all
+Through childhood, through youth
+I remember it all
+Oh, I've seen the nights filled with bloodsport and pain
+And the bodies obtained, the bodies obtained, the bodies obtained
+Where will it end?  Where will it end? 
+
+Forced by the pressure
+The territories marked
+No longer the pleasure
+Oh, I've since lost the heart
+Corrupted from memory
+No longer the power
+It's creeping up slowly
+That last fatal hour
+Oh, I don't know what made me
+What gave me the right
+To mess with your values
+And change wrong to right
+Please keep your distance
+The trail leads to here
+There's blood on your fingers
+Brought on by fear
+I campaigned for nothing
+I worked hard for this
+I tried to get to you
+You treat me like this
+It's second nature
+It's what we've been shown
+We're living by your rules
+That's all that we know
+I tried to get to you.
+
+Guess your dreams always end
+They don't rise up just descend
+But I don't care anymore
+I've lost the will to want more
+I'm not afraid not at all
+I watch them all as they fall
+But I remember when we were young
+Those with habits of waste
+Their sense of style and good taste
+Of making sure you were right
+Hey don't you know you were right?
+I'm not afraid anymore
+I keep my eyes on the door
+But I remember
+Tears of sadness for you
+More upheaval for you
+Reflects a moment in time
+A special moment in time
+Yeah, we are wasted our time
+We didn't really have time
+But we remember when we were young
+And all of God's angels beware
+And all you judges beware
+Sons of chance, take good care
+For all the people not there
+I'm not afraid anymore 
+Oh, I'm not afraid anymore
+
+A change of speed, a change of style
+A change of scene, with no regrets
+A chance to watch, admire the distance
+Still occupied, though you forget
+Different colours, different shades
+Over each mistakes were made
+I took the blame
+Directionless so plain to see
+A loaded gun won't set you free
+So you say
+We'll share a drink and step outside
+An angry voice and one who cried
+" We'll give you everything and more,
+the strain's too much, can take much more".
+Oh, I've walked on water, run through fire
+Can't seem to feel it anymore
+It was me, waiting for me
+Hoping for something more
+Me, seeing me this time, hoping for something else.
+
+Confusion in her eyes that says it all
+She's lost control
+And she's clinging to the nearest passer by
+She's lost control
+And she gave away the secrets of her past
+And said I've lost control again
+And of a voice that told her when and were to act
+She said I've control again
+And she turned around and took by the hand and said
+I've lost control again
+And how I'll never know just why or understand
+She said I've lost control again
+And she screamed out kicking on her side and said
+I've control again
+And seized up on the floor, I thought she'd died
+She said I've lost control again, she's lost control
+Well I had to 'phone her friend to state my case
+And say she's lost control again
+And she showed up all the errors and mistakes
+And said I've lost control again
+But she expressed herself in many different ways
+Until she lost control again
+And walked upon the edge of no escape
+And laughed I've lost control again
+She's lost control again, she's lost control
+
+To the centre of the city where all roads meet, waiting for you
+To the depths of the ocean where all hopes sank, searching for you
+I was moving through the silence without motion, waiting for you
+In a room with a window in the corner I found truth
+In the shadowplay, acting out your own death, knowing no more
+As the assassins al grouped in four lines, dancing on the floor
+And with cold steel, odour on their bodies made a move to connect
+But I could only stare in disbelief as the crowds all left
+I did everything, everything I wanted to
+I let them use you for their own ends
+To the centre of the city in the night, waiting for you.
+
+I travelled far and wide through many different times
+What did you see there?
+I saw the saints with their toys
+What did you see there?
+I saw all knowledge destroyed 
+I travelled far and wide to many different times
+I travelled far and wide through prisons of the cross
+What did you see there?
+The power and glory of sin
+What did you see there?
+The blood of Christ on their skins
+I travelled far and wide through many different times
+I travelled far and wide and unknown martyrs died
+What did you see there?
+I saw the one sided trials
+What did you see there?
+I saw the tears as they cried
+They had tears in their eyes
+Tears in their eyes.
+
+I walked through the city limits
+Someone talked me in to do it
+Attracted by some force within it
+Had to close my eyes to get close to it
+Around a corner where a prophet lay
+Saw the place where she'd a room to stay
+A wire fence where the children played
+Saw the bed where the body lay
+And I was looking for a friend of mine
+And I had no time to waste
+Yeah, looking for some friends of mine
+The cars screeched hear the sound on dust
+Heard a noise just a car outside
+Metallic blue turned red with rust
+Pulled in close by  the building's side
+In a group all forgotten youth
+Had to think, collect my senses now
+Are turned on to a knife edged view
+Find some places where my friends don't know
+And I was looking for a friend of mine
+And had no time to waste
+Yeah, looking for some friends of mine
+Down the dark streets, the houses looked the same
+Getting darker now, faces look the same
+And I walked round and round
+No stomach, torn apart
+Nail me to a train
+Had to think again
+Trying to find a clue, trying to find a way to get out!
+Trying to move away, had to move away and keep out
+Four, twelve windows, ten in a row
+Behind a wall, well I looked down low
+The lights shined like a neon show
+Inserted deep felt a warmer glow
+No place to stop, no place to go
+No time to lose, had to keep on going
+I guess they died some time ago
+And I was looking for a friend of mine 
+And I had no time to waste
+Yeah, looking for some friends of mine.
+
+We were strangers
+We were strangers, for way to long, for way to long
+We were strangers, for way to long
+Violent, violent
+We were strangers
+Get weak all the time, may just past the time
+Me in my own world, yeah you there beside
+The gaps are enormous, we stare from each side
+We were strangers for way too long
+Violent, more violent, his hand cracks the chair
+Moves on reaction, then slumps in despair
+Trapped in a cage and surrendered too soon
+Me in my own world, the one that you knew
+For way too long
+We were strangers for way too long
+We were strangers
+We were strangers for way too long
+For way too long.
+</textarea>
+</td>
+</tr>
+
+<tr>
+<td>
+Static Words - <a href="javascript:clearConstraint()">clear</a> - <a href="javascript:copyTemplate()">copy template</a> - <a href="javascript:setClosedClass()">append closed-class</a> 
+<br>
+<textarea rows="2" cols="60" name="stopWords">
+When I do count the that tells the ,
+And see the brave sunk in hideous ;
+When I behold the past ,
+And curls, all silvered o'er with ; 
+When lofty I see barren of ,
+Which erst from did canopy the ,
+And summer's all girded up in ,
+Borne on the with white and bristly ,
+Then of thy do I make,
+That thou among the of must go,
+Since and do themselves forsake
+And die as fast as they see grow;
+  And 'gainst Time's can make 
+  Save , to brave him when he takes thee hence.
+? ! 'phone A An al 
+</textarea>
+<br>constraining <select name="toConstrain"><option value="template">Template Text only<option selected value="both">Template Text and Input Text</select>, 
+<select name="considerCaseInConstraint"><option value="caseSensitive">case sensitive<option selected value="notCaseSensitive">not case sensitive</select>.
+</td>
+
+<td>
+<input type="button" style="background-color:#FF9999" value="Display Editor" onClick="printMixture()">, 
+using <select name="languageUse"><option selected value="both">both template and input texts<option value="originalAndInput">original word and input text<option value="additional">only input text<option value="template">only template text</select> for selection, 
+<br>&nbsp; showing <select name="selectSize"><option selected value="3">3<option value="5">5<option value="7">7</select> selections ordered <select name="selectStyle"><option selected value="alphabetical">alphabetically<option value="ordered">as read</select>, 
+highlighting initial selection <select name="initialSelected"><option selected value="random">randomly<option value="original">by original</select>.
+<br>&nbsp; You can <a href="javascript:randomizeChecklisted()">randomize checklisted</a> selections. (<a href="javascript:setChecklistedAll()">select</a> / <a href="javascript:setChecklistedNone()">unselect</a> all). You may want to <a href="javascript:exportText()">export</a> when done.
+</td>
+</tr>
+</table>
+
+
+</form>
+</body>
+
+</html>
