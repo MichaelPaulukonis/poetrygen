@@ -136,7 +136,7 @@
       // get the template text, make an array out of it
       var templateText = parent.control.document.getElementById("templateText").value;
       var aTemplateText = makeTemplateArray(templateText, false);
-      debugOutput( "\nTemplate Text is: " +  templateText, statusVerbosity, 1 );
+      debugOutput( "\nTemplate Text is: \n" +  templateText, statusVerbosity, 1 );
 
 
       // * * * * * * * * * * * * * * * *
@@ -172,8 +172,12 @@
       var aGeneratedWordsStatic = new Array();
 
       // if there are any non-template words in template: generate from that
+      //   (i.e. you've pasted in a poem to edit)
       // else if NO word button exists in the editor area, generate from scratch
+      //   (i.e. you're starting a new poem)
       // otherwise make list based on whats in the editor area
+      //   (i.e. you're re-generating a new version of a poem)
+
       var oElement = parent.editor.document.getElementById('w0');
 
       var hasNonTemplateWord = lookForNonTemplateWord( aTemplateText );
@@ -183,6 +187,7 @@
       if ( hasNonTemplateWord ) {
 
           aTemplateText = makeTemplateArray( templateText, true );
+          debugOutput( "\nTemplate Text is: \n" +  templateText, statusVerbosity, 1 );
 
           // figure out the words to use and which to replace
           for ( var i=0; i<aTemplateText.length; i++ ) {
@@ -237,13 +242,15 @@
                 for ( var j=0; j<x; j++ ) {
                     newTemplate += "[s] ";
                 }
+                debugOutput(" word " + templateToken + " has " + x + " syllables ", statusVerbosity, 1 );
+
              }
           }  
 
           parent.control.document.getElementById("templateText").value = newTemplate;
           templateText = parent.control.document.getElementById("templateText").value;
           aTemplateText = makeTemplateArray(templateText, false);
-
+          debugOutput( "\nTemplate Text is: \n" +  templateText, statusVerbosity, 1 );
 
       } else if  ( oElement == null ) {
 
@@ -795,6 +802,8 @@
     //debugOutput( "*** incoming word: " + wordToCount, statusVerbosity, 1 );
     //debugOutput( "*** incoming word: " + syllableExceptionsAlgorithm[ wordToCount ], statusVerbosity, 1 );
 
+    wordToCount = wordToCount.toLowerCase();
+
     if ( syllableExceptionsAlgorithm.hasOwnProperty(wordToCount) ) {
       //debugOutput( "*** returning from lookup: " + syllableExceptionsAlgorithm[ wordToCount ], statusVerbosity, 1 ); 
       return syllableExceptionsAlgorithm[ wordToCount ];
@@ -809,7 +818,13 @@
 
     var t = editedWord.split("e").length - 1;
     //debugOutput( "*** returning from algorithm: " +  t, statusVerbosity, 1 ); 
-    return editedWord.split("e").length - 1;
+
+    var toReturn = editedWord.split("e").length - 1;
+    if ( toReturn < 0 ) {
+       toReturn = 0;
+    }
+
+    return toReturn;
   }
 
 
@@ -3851,9 +3866,6 @@ Next take out each cutting one after the other.
 Copy conscientiously in the order in which they left the bag.
 The poem will resemble you.
 And there you are - an infinitely original author of charming sensibility, even though unappreciated by the vulgar herd.
-
-Example:
-when dogs cross the air in a diamond like ideas and the appendix of the meninx tells the time of the alarm programme (the title is mine) prices they are yesterday suitable next pictures/ appreciate the dream era of the eyes/ pompously that to recite the gospel sort darkens/ group apotheosis imagine said he fatality power of colours/ carved flies (in the theatre) flabbergasted reality a delight/ spectator all to effort of the no more 10 to 12/ during divagation twirls descends pressure/ render some mad single-file flesh on a monstrous crushing stage/ celebrate but their 160 adherents in steps on put on my nacreous/ sumptuous of land bananas sustained illuminate/ joy ask together almost/ of has the a such that the invoked visions/ some sings latter laughs/ exits situation disappears describes she 25 dance bows/ dissimulated the whole of it isn't was/ magnificent has the band better light whose lavishness stage music-halls me/ reappears following instant moves live/ business he didn't has lent/ manner words come these people 
 </textarea>
 
 <br><br>
