@@ -1140,11 +1140,14 @@ function appendButton( editorString, wordToPrint, generatedWordsIndex, areWordsS
     }
 
     if ( changeSelectionEffect == "requiresClick" ) {
+       changeSelection2 = " onclick='javascript:switchColor(this)'";
+/*
        if ( areWordsSelectedBegin == "startSelected" ) {
           changeSelection2 = " onclick='javascript:switchToUnselected(this)'";
        } else {
           changeSelection2 = " onclick='javascript:switchToSelected(this)'";
        }
+*/
     } else if ( changeSelectionEffect == "changesOneWayPlusClick" ) {
        if ( areWordsSelectedBegin == "startSelected" ) {
           changeSelection2 = " onclick='javascript:switchToSelected(this)'";
@@ -1320,9 +1323,9 @@ Options: <br>
 &nbsp; &nbsp; &nbsp; &nbsp; &bull; Start with words <select id="optionsStartSelected"><option selected value="startSelected">selected<option value="startNotSelected">not selected</select><br>
 
 &nbsp; &nbsp; &nbsp; &nbsp; &bull; On mouseover, selection <select id="optionsChangeSelected">
-<option selected value="changesOneWayPlusClick">changes one way unless clicked
+<option value="changesOneWayPlusClick">changes one way unless clicked
 <option value="changesOneWay">changes one way
-<option value="requiresClick">requires click
+<option selected value="requiresClick">requires click to change
 <option value="togglesBetween">toggles
 </select> <br>
 
