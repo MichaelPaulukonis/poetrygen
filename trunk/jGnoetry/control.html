@@ -133,9 +133,43 @@
       }
 
 
-      // get the template text, make an array out of it
+      // expand the template text
+      var templateTextPre = parent.control.document.getElementById("templateText").value;
       var templateText = parent.control.document.getElementById("templateText").value;
-      var aTemplateText = makeTemplateArray(templateText, false);
+
+      //debugOutput( "\nSearch for number is: \n" +  templateTextPre.search("\\d"), statusVerbosity, 1 );
+
+      if ( templateTextPre.search("\\d") != -1 ) {
+	  var aTemplateTextPre = makeTemplateArray(templateTextPre, true, false);
+	  debugOutput( "\nTemplate Text Before Expansion is: \n" +  templateTextPre, statusVerbosity, 1 );
+
+	  var newTemplateText = "";
+	  for ( var i=0; i<aTemplateTextPre.length; i++ ) {
+	      var templateTokenPre = aTemplateTextPre[i];
+	      // if it contains a series of digits with an "s" surrounded by brackets
+	      if ( templateTokenPre.match("\[\d+s\]")) {
+		  // remove everything except the number
+		  var templateTokenPreNumber = templateTokenPre.replace(/[\[\]s]/g, "");
+		 if ( templateTokenPreNumber > 0 ) {
+		      for ( var j=0; j<templateTokenPreNumber; j++ ) {
+			  newTemplateText += "[s] ";
+		      }
+		  } else {
+			  newTemplateText += "[s] ";
+		  }
+	      } else {
+		  newTemplateText += templateTokenPre;
+		  if ( templateTokenPre != "\n" && templateTokenPre != "\r" ) {
+		      newTemplateText += " ";
+		  }
+	      }
+	  }
+	  parent.control.document.getElementById("templateText").value = newTemplateText;
+          templateText = newTemplateText;
+      }
+
+      // get the template text, make an array out of it
+      var aTemplateText = makeTemplateArray(templateText, false, false);
       debugOutput( "\nTemplate Text is: \n" +  templateText, statusVerbosity, 1 );
 
 
@@ -186,7 +220,7 @@
 
       if ( hasNonTemplateWord ) {
 
-          aTemplateText = makeTemplateArray( templateText, true );
+          aTemplateText = makeTemplateArray( templateText, true, false );
           debugOutput( "\nTemplate Text is: \n" +  templateText, statusVerbosity, 1 );
 
           // figure out the words to use and which to replace
@@ -249,7 +283,7 @@
 
           parent.control.document.getElementById("templateText").value = newTemplate;
           templateText = parent.control.document.getElementById("templateText").value;
-          aTemplateText = makeTemplateArray(templateText, false);
+          aTemplateText = makeTemplateArray(templateText, false, false);
           debugOutput( "\nTemplate Text is: \n" +  templateText, statusVerbosity, 1 );
 
       } else if  ( oElement == null ) {
@@ -464,6 +498,8 @@
       parent.display.document.getElementById("displayText").innerHTML = editStringPunctuationOutput(outputString);
       parent.editor.document.getElementById("jGnoetryTitle").innerHTML = "";
       parent.editor.document.getElementById("displayEditor").innerHTML = editorString;
+
+//      parent.control.document.getElementById("templateText").innerHTML = templateText;
 
   }
 
@@ -816,6 +852,7 @@
     if ( editedWord.match(/.*[aeiouy].+[aeiouy].*/) ) {
         editedWord = editedWord.replace(/e$/g, "");
     }
+    // do I really need a plus there?
     editedWord = editedWord.replace(/[aeiouy]+/g, "e");
     //debugOutput( "    edited word: " + editedWord );
 
@@ -837,7 +874,7 @@
 
 
   // get template text, make array out of it
-  function makeTemplateArray( templateText, keepNewlines ) {
+  function makeTemplateArray( templateText, keepNewlines, handlePunctuation ) {
 
       // remove any trailing newlines (so don't have hanging end punctuation)
       templateText = templateText.replace(/[\n\r]+$/g, " ");
@@ -846,6 +883,12 @@
       if ( keepNewlines ) {
           templateText = templateText.replace(/\r/g, " \r ");
           templateText = templateText.replace(/\n/g, " \n ");
+      } else {
+        templateText = templateText.replace(/\r/g, " ");
+        templateText = templateText.replace(/\n/g, " ");
+      }
+
+      if ( handlePunctuation ) {
 
           // place spaces around parens
           templateText = templateText.replace(/\"/g, " \" ");
@@ -869,11 +912,7 @@
           templateText = templateText.replace(/;/g, " ; ");
           templateText = templateText.replace(/:/g, " : ");
           templateText = templateText.replace(/--/g, " -- ");
-      } else {
-        templateText = templateText.replace(/\r/g, " ");
-        templateText = templateText.replace(/\n/g, " ");
       }
-
 
       templateText = templateText.replace(/ +/g, " ");
       templateText = templateText.replace(/^ /g, "");
