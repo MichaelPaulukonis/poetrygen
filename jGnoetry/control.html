@@ -147,10 +147,23 @@
 	  for ( var i=0; i<aTemplateTextPre.length; i++ ) {
 	      var templateTokenPre = aTemplateTextPre[i];
 	      // if it contains a series of digits with an "s" surrounded by brackets
-	      if ( templateTokenPre.match("\[\d+s\]")) {
-		  // remove everything except the number
-		  var templateTokenPreNumber = templateTokenPre.replace(/[\[\]s]/g, "");
-		 if ( templateTokenPreNumber > 0 ) {
+	      if ( templateTokenPre.match("\[\d+-?\d+s\]")) {
+	      //} else if ( templateTokenPre.match("\[\d+s\]")) {
+
+    		  // remove everything except the number (and maybe the dash)
+		  var simplifiedString = templateTokenPre.replace(/[\[\]s]/g, "");
+                  var templateTokenPreNumber = simplifiedString;
+		  //var templateTokenPreNumber = templateTokenPre.replace(/[\[\]s]/g, "");
+                  // if there's a dash, remove it and get the random number
+                  if ( simplifiedString.search("-") != -1 ) {
+                     aNumbers = simplifiedString.split("-");
+                     if ( aNumbers[0].match(/\d+/) && aNumbers[1].match(/\d+/) && parseInt(aNumbers[0]) < parseInt(aNumbers[1]) ) {
+                         templateTokenPreNumber = Math.floor(Math.random()*aNumbers[1]) + parseInt(aNumbers[0]);
+                         debugOutput( "\nRandom Number between " + aNumbers[0] + " and " + aNumbers[1] + " is: \n" +  templateTokenPreNumber, statusVerbosity, 1 );
+                     }
+                  }
+    
+                  if ( templateTokenPreNumber > 0 ) {
 		      for ( var j=0; j<templateTokenPreNumber; j++ ) {
 			  newTemplateText += "[s] ";
 		      }
@@ -234,7 +247,7 @@
                while ( syllableBalance < 0  && loopCount < 5 ) {
 
                  if ( i==0 ) {
-                   history = getAFirstWord( aCorporaTexts, aCorporaWeights, isFirstWord, byNewlineOrPunctuation, statusVerbosity );
+                   history = getAFirstWord( aCorporaTexts, aCorporaWeights, true, byNewlineOrPunctuation, statusVerbosity );
                  } else {
                    history = getAWord( aCorporaTexts, aCorporaWeights, aTemplateText[i], statusVerbosity )
                  }
@@ -1252,6 +1265,8 @@ function setBaseForm(dropdownForm) {
     parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s]";
   } else if ( selectedValue == "blankSonnet" ) {
     parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s]";
+  } else if ( selectedValue == "freeVerse" ) {
+    parent.control.document.controlForm.templateText.value = "[3-9s] [n]\n[3-9s] [n]\n[3-9s] [n]\n[3-9s] [n]\n[3-9s]";
   } else if ( selectedValue == "haiku" ) {
     parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] ";
   } else if ( selectedValue == "tanka" ) {
@@ -1408,7 +1423,7 @@ Status: &nbsp; &nbsp; <select id="statusVerbosityLevel"><option value="silent">s
 
 
 <td>
-Form: <select name="baseForm" onchange="setBaseForm(this.form.baseForm)"><option value="couplet">couplet<option selected value="quatrain">quatrain<option value="blankSonnet">blank sonnet<option value="haiku">haiku<option value="tanka">tanka<option value="renga">renga</select> &nbsp; &nbsp; &nbsp; &nbsp; show/hide: <a href="javascript:toggleCorpus()">corpora</a> | <a href="javascript:toggleTemplate()">template</a> | <a href="javascript:toggleStatus()">status</a> | <a href="javascript:toggleOptions()">options</a>
+Form: <select name="baseForm" onchange="setBaseForm(this.form.baseForm)"><option value="couplet">couplet<option selected value="quatrain">quatrain<option value="blankSonnet">blank sonnet<option value="freeVerse">free verse<option value="haiku">haiku<option value="tanka">tanka<option value="renga">renga</select> &nbsp; &nbsp; &nbsp; &nbsp; show/hide: <a href="javascript:toggleCorpus()">corpora</a> | <a href="javascript:toggleTemplate()">template</a> | <a href="javascript:toggleStatus()">status</a> | <a href="javascript:toggleOptions()">options</a>
 
 <span id="templateSpan" style="display:none">
 <br>
@@ -3897,7 +3912,7 @@ For men diseas'd; but I, my mistress thrall,
 
 <br><br>
 
-Corpus 2: &nbsp; <a href="javascript:clearCorpus('corpus2')">clear</a> &nbsp; &nbsp; weight: <select id="weightCorpus2" onchange="javascript:calculateWeights()"><option value="0">0<option selected value="1">1<option value="2">2<option value="3">3<option value="4">4<option value="5">5<option value="6">6<option value="7">7<option value="8">8<option value="9">9<option value="10">10</select> &nbsp; (<span id="percentageWeightCorpus2">10</span>%)<br>
+Corpus 2: &nbsp; <a href="javascript:clearCorpus('corpus2')">clear</a> &nbsp; &nbsp; weight: <select id="weightCorpus2" onchange="javascript:calculateWeights()"><option selected value="0">0<option selected value="1">1<option value="2">2<option value="3">3<option value="4">4<option value="5">5<option value="6">6<option value="7">7<option value="8">8<option value="9">9<option value="10">10</select> &nbsp; (<span id="percentageWeightCorpus2">10</span>%)<br>
 <textarea rows="4" cols="60" id="corpus2">
 // Tristan Tzara - To Make a Dadaist Poem
  
