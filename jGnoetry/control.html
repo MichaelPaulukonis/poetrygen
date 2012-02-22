@@ -157,9 +157,14 @@
                   // if there's a dash, remove it and get the random number
                   if ( simplifiedString.search("-") != -1 ) {
                      aNumbers = simplifiedString.split("-");
-                     if ( aNumbers[0].match(/\d+/) && aNumbers[1].match(/\d+/) && parseInt(aNumbers[0]) < parseInt(aNumbers[1]) ) {
-                         templateTokenPreNumber = Math.floor(Math.random()*aNumbers[1]) + parseInt(aNumbers[0]);
-                         debugOutput( "\nRandom Number between " + aNumbers[0] + " and " + aNumbers[1] + " is: \n" +  templateTokenPreNumber, statusVerbosity, 1 );
+                     if ( aNumbers[0].match(/\d+/) && aNumbers[1].match(/\d+/) ) {
+                         var lower = parseInt(aNumbers[0]);
+                         var upper = parseInt(aNumbers[1]);
+                         var range = upper - lower + 1;
+                         if ( lower < upper ) {
+                             templateTokenPreNumber = Math.floor(Math.random()*range + lower);
+                             debugOutput( "\nRandom Number between " + lower + " and " + upper + " is: \n" +  templateTokenPreNumber, statusVerbosity, 1 );
+                         }
                      }
                   }
     
