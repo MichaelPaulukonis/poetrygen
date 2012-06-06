@@ -1,0 +1,42 @@
+
+#generationButton {
+ background-color: #FF9999;
+ margin-right: 10px;
+ float: left;
+}
+
+/* oh, what a dumb name */
+.lfloat {
+    float: left;
+    margin-left: 30px;
+}
+
+
+#wrap {
+    width: 1030px;
+}
+
+#headerControls {
+    clear: both;
+    overflow: hidden;
+}
+
+#column1 {
+    width: 510px;
+    float: left;
+}
+
+#column2 {
+    width: 510px;
+    float: right;
+}
+
+
+.indent {
+    margin-left: 20px;
+}
+
+#debugOutput {
+    background-color: #CCCCCC;
+    font-family: monospace;
+}
