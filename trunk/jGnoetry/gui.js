@@ -6,43 +6,43 @@
 $(document).ready(
     function() {
 
-	setVisibility('templateSpan', false);
-	setVisibility('statusSpan', false);
-	setVisibility('corpusSpan', false);
-	setVisibility('optionsSpan', false);
+	      setVisibility('templateSpan', false);
+	      setVisibility('statusSpan', false);
+	      setVisibility('corpusSpan', false);
+	      setVisibility('optionsSpan', false);
 
-	var g = new gui();
-	g.showHide();
+	      var g = new gui();
+	      g.showHide();
 
-	g.setCorpusTexts();
+	      g.setCorpusTexts();
 
-	$('#generationButton').click(g.callGenerate);
+	      $('#generationButton').click(g.callGenerate);
 
-	// since these are set as hrefs, we can't dump params in there right now...
-	// this is duplicating the original code, just removing from the html
-	$('#selectAll').click(function() { setSelectedAll(); });
-	$('#unselectAll').click(function() { setSelectedNone(); });
-	$('#exportText').click(function() { exportText(); });
-	$('#exportDebug').click(function() { exportDebug(); });
+	      // since these are set as hrefs, we can't dump params in there right now...
+	      // this is duplicating the original code, just removing from the html
+	      $('#selectAll').click(function() { setSelectedAll(); });
+	      $('#unselectAll').click(function() { setSelectedNone(); });
+	      $('#exportText').click(function() { exportText(); });
+	      $('#exportDebug').click(function() { exportDebug(); });
 
-	$('#baseForm').bind('change', function() { setBaseForm(this.form.baseForm); } );
+	      $('#baseForm').bind('change', function() { setBaseForm(this.form.baseForm); } );
 
-	$('#toggleCorpora').click(toggleCorpus);
-	$('#toggleTemplate').click(toggleTemplate);
-	$('#toggleStatus').click(toggleStatus);
-	$('#toggleOptions').click(toggleOptions);
+	      $('#toggleCorpora').click(toggleCorpus);
+	      $('#toggleTemplate').click(toggleTemplate);
+	      $('#toggleStatus').click(toggleStatus);
+	      $('#toggleOptions').click(toggleOptions);
 
-	$('#clearTemplate').click(function() { clearTextarea("templateText"); });
-	$('#clearCorpus1').click(function() { clearCorpus('corpus1'); });
-	$('#clearCorpus2').click(function() { clearCorpus('corpus2'); });
-	$('#clearCorpus3').click(function() { clearCorpus('corpus3'); });
+	      $('#clearTemplate').click(function() { clearTextarea("templateText"); });
+	      $('#clearCorpus1').click(function() { clearCorpus('corpus1'); });
+	      $('#clearCorpus2').click(function() { clearCorpus('corpus2'); });
+	      $('#clearCorpus3').click(function() { clearCorpus('corpus3'); });
 
-	$('#weightCorpus1').bind('change', calculateWeights);
-	$('#weightCorpus2').bind('change', calculateWeights);
-	$('#weightCorpus3').bind('change', calculateWeights);
+	      $('#weightCorpus1').bind('change', calculateWeights);
+	      $('#weightCorpus2').bind('change', calculateWeights);
+	      $('#weightCorpus3').bind('change', calculateWeights);
 
-	// so, what this adds has hard-coded values in it...
-	$('#addCorpus').click(function() { addCorpus(parent.control.document); });
+	      // so, what this adds has hard-coded values in it...
+	      $('#addCorpus').click(function() { addCorpus(parent.control.document); });
     }
 
 );
@@ -54,36 +54,37 @@ var gui = function() {
 
     this.callGenerate = function() {
 
-	var  control = parent.control.document;
+	      var control = parent.control.document;
 
-	var options = self.getOptions(control);
+	      var options = self.getOptions(control);
 
-	// capture statusVerbosity, and never [for scoped-functions] refer to it again
-	debug = function(msg, level) {
-	    debugOutput(msg, options.statusVerbosity, level);
-	};
+	      // capture statusVerbosity, and never [for scoped-functions] refer to it again
+	      debug = function(msg, level) {
+	          debugOutput(msg, options.statusVerbosity, level);
+	      };
 
-	var templateText = control.getElementById("templateText").value;
+	      var templateText = control.getElementById("templateText").value;
 
-	var corpora = self.getCorpora(options.capitalize.method, options.handlePunctuation);
-
-
-
-	// show the editing options
-	control.getElementById("editingSpan").style.visibility = 'visible';
-	control.getElementById("generationButton").value = 'Re-Generate';
-
-	// ideally, debug [wrapper] is scoped to ALL of the functions called by generate, as well
-	// this requires encapsulating them all....
-	var jg = new jGnoetry(debug);
-	var output = jg.generate(templateText, options, corpora);
+	      var corpora = self.getCorpora(options.capitalize.method, options.handlePunctuation);
 
 
-	// dump to display
-	parent.display.document.getElementById("displayText").innerHTML = output.displayText;
-	parent.editor.document.getElementById("jGnoetryTitle").innerHTML = "";
-	parent.editor.document.getElementById("displayEditor").innerHTML = output.displayEditor;
-	control.getElementById("templateText").value = output.template;
+	      // show the editing options
+	      control.getElementById("editingSpan").style.visibility = 'visible';
+	      control.getElementById("generationButton").value = 'Re-Generate';
+
+	      // ideally, debug [wrapper] is scoped to ALL of the functions called by generate, as well
+	      // this requires encapsulating them all....
+	      var jg = new jGnoetry(debug);
+        var existingText = self.getExistingText();
+        // TODO: ugh. that's a lot of ugly parameters
+	      var output = jg.generate(templateText, options, corpora, existingText);
+
+
+	      // dump to display
+	      parent.display.document.getElementById("displayText").innerHTML = output.displayText;
+	      parent.editor.document.getElementById("jGnoetryTitle").innerHTML = "";
+	      parent.editor.document.getElementById("displayEditor").innerHTML = output.displayEditor;
+	      control.getElementById("templateText").value = output.template;
 
 
     };
@@ -91,78 +92,78 @@ var gui = function() {
     // TODO: CLEANUP!
     this.getOptions = function(document) {
 
-	var opunct = document.getElementById("optionsPunctuation");
-	var opsl = document.getElementById("optionsStartlines");
-	var options = {
-	    // parameter: whether to remove parentheticals (or place spaces around them)
-	    handlePunctuation: opunct.options[opunct.selectedIndex].value,
-	    // parameter: how we should start new lines: by those words following newlines, or following punctuation
-	    byNewlineOrPunctuation:  opsl.options[opsl.selectedIndex].value
-	};
+	      var opunct = document.getElementById("optionsPunctuation");
+	      var opsl = document.getElementById("optionsStartlines");
+	      var options = {
+	          // parameter: whether to remove parentheticals (or place spaces around them)
+	          handlePunctuation: opunct.options[opunct.selectedIndex].value,
+	          // parameter: how we should start new lines: by those words following newlines, or following punctuation
+	          byNewlineOrPunctuation:  opsl.options[opsl.selectedIndex].value
+	      };
 
-	// parameters: how we should capitalize
-	var capitalizeMethod = "";
-	var capitalizeCustomSentence = false;
-	var capitalizeCustomLine = false;
-	var capitalizeCustomI = false;
-	if ( document.getElementById("capitalizeAsCorpus").checked == true ) {
-	    capitalizeMethod = "capitalizeAsCorpus";
-	} else  if ( document.getElementById("capitalizeNone").checked == true ) {
-	    capitalizeMethod = "capitalizeNone";
-	} else  if ( document.getElementById("capitalizeCustom").checked == true ) {
-	    capitalizeMethod = "capitalizeCustom";
-	    if ( document.getElementById("capitalizeCustomSentence").checked == true ) {
-		capitalizeCustomSentence = true;
-	    }
-	    if ( document.getElementById("capitalizeCustomLine").checked == true ) {
-		capitalizeCustomLine = true;
-	    }
-	    if ( document.getElementById("capitalizeCustomI").checked == true ) {
-		capitalizeCustomI = true;
-	    }
-	}
+	      // parameters: how we should capitalize
+	      var capitalizeMethod = "";
+	      var capitalizeCustomSentence = false;
+	      var capitalizeCustomLine = false;
+	      var capitalizeCustomI = false;
+	      if ( document.getElementById("capitalizeAsCorpus").checked == true ) {
+	          capitalizeMethod = "capitalizeAsCorpus";
+	      } else  if ( document.getElementById("capitalizeNone").checked == true ) {
+	          capitalizeMethod = "capitalizeNone";
+	      } else  if ( document.getElementById("capitalizeCustom").checked == true ) {
+	          capitalizeMethod = "capitalizeCustom";
+	          if ( document.getElementById("capitalizeCustomSentence").checked == true ) {
+		            capitalizeCustomSentence = true;
+	          }
+	          if ( document.getElementById("capitalizeCustomLine").checked == true ) {
+		            capitalizeCustomLine = true;
+	          }
+	          if ( document.getElementById("capitalizeCustomI").checked == true ) {
+		            capitalizeCustomI = true;
+	          }
+	      }
 
-	options.capitalize = {
-	    method: capitalizeMethod,
-	    customSentence: capitalizeCustomSentence,
-	    customLine: capitalizeCustomLine,
-	    customI: capitalizeCustomI
-	};
+	      options.capitalize = {
+	          method: capitalizeMethod,
+	          customSentence: capitalizeCustomSentence,
+	          customLine: capitalizeCustomLine,
+	          customI: capitalizeCustomI
+	      };
 
-	// parameter: what you should append to end of poem if there is no punctuation there already:
-	// appendPeriod, appendQuestion, appendExclamation, appendNothing
-	var oa = document.getElementById("optionsAppend");
-	var appendToPoem = oa.options[oa.selectedIndex].value;
+	      // parameter: what you should append to end of poem if there is no punctuation there already:
+	      // appendPeriod, appendQuestion, appendExclamation, appendNothing
+	      var oa = document.getElementById("optionsAppend");
+	      var appendToPoem = oa.options[oa.selectedIndex].value;
 
-	// parameter: whether editor should begin with words selected or not
-	var oss = document.getElementById("optionsStartSelected");
-	var areWordsSelectedBegin = oss.options[oss.selectedIndex].value;
-	var thisWordSelectedBegin = areWordsSelectedBegin ;
+	      // parameter: whether editor should begin with words selected or not
+	      var oss = document.getElementById("optionsStartSelected");
+	      var areWordsSelectedBegin = oss.options[oss.selectedIndex].value;
+	      var thisWordSelectedBegin = areWordsSelectedBegin ;
 
-	// parameter: mouseover effect
-	var ocs = document.getElementById("optionsChangeSelected");
-	var changeSelectionEffect = ocs.options[ocs.selectedIndex].value;
+	          // parameter: mouseover effect
+	      var ocs = document.getElementById("optionsChangeSelected");
+	      var changeSelectionEffect = ocs.options[ocs.selectedIndex].value;
 
-	options.appendToPoem = appendToPoem;
-	options.areWordsSelectedBegin = areWordsSelectedBegin;
-	options.thisWordSelectedBegin = thisWordSelectedBegin;
-	options.changeSelectionEffect = changeSelectionEffect;
+	      options.appendToPoem = appendToPoem;
+	      options.areWordsSelectedBegin = areWordsSelectedBegin;
+	      options.thisWordSelectedBegin = thisWordSelectedBegin;
+	      options.changeSelectionEffect = changeSelectionEffect;
 
 
-	// parameter: status verbosity
-	var svl = document.getElementById("statusVerbosityLevel");
-	var statusVerbosity = svl.options[svl.selectedIndex].value;
-	if ( statusVerbosity == "silent" ) {
-	    statusVerbosity = 0;
-	} else if ( statusVerbosity == "terse" ) {
-	    statusVerbosity = 1;
-	} else if ( statusVerbosity == "verbose" ) {
-	    statusVerbosity = 2;
-	}
+	      // parameter: status verbosity
+	      var svl = document.getElementById("statusVerbosityLevel");
+	      var statusVerbosity = svl.options[svl.selectedIndex].value;
+	      if ( statusVerbosity == "silent" ) {
+	          statusVerbosity = 0;
+	      } else if ( statusVerbosity == "terse" ) {
+	          statusVerbosity = 1;
+	      } else if ( statusVerbosity == "verbose" ) {
+	          statusVerbosity = 2;
+	      }
 
-	options.statusVerbosity = statusVerbosity;
+	      options.statusVerbosity = statusVerbosity;
 
-	return options;
+	      return options;
 
     };
 
@@ -170,39 +171,39 @@ var gui = function() {
     // this continues to read from the document dynamically, depending on the number of corpus(n) that exist
     this.getCorpora = function(capitalizeMethod, handlePunctuation) {
 
-	// make array of corpora texts, and of corpora (percentage) weights
-	var aCorporaTexts = new Array();
-	var aCorporaWeights = new Array();
-	var oTextArea = parent.control.document.getElementById('corpus1');
-	var j = 1; // corpus counter
-	while ( oTextArea != null ) {
+	      // make array of corpora texts, and of corpora (percentage) weights
+	      var aCorporaTexts = new Array();
+	          var aCorporaWeights = new Array();
+	      var oTextArea = parent.control.document.getElementById('corpus1');
+	      var j = 1; // corpus counter
+	      while ( oTextArea != null ) {
 
-	    //var tempCorpusText = oTextArea.value;
-	    var tempCorpusText = self.editStringCleanCorpus( oTextArea.value, handlePunctuation );
-	    // remove caps from the corpus, if need be
-	    if ( capitalizeMethod == "capitalizeNone" || capitalizeMethod == "capitalizeCustom" ) {
-		tempCorpusText = tempCorpusText.toLowerCase();
-	    }
-	    aCorporaTexts.push( tempCorpusText );
+	          //var tempCorpusText = oTextArea.value;
+	          var tempCorpusText = self.editStringCleanCorpus( oTextArea.value, handlePunctuation );
+	          // remove caps from the corpus, if need be
+	          if ( capitalizeMethod == "capitalizeNone" || capitalizeMethod == "capitalizeCustom" ) {
+		            tempCorpusText = tempCorpusText.toLowerCase();
+	          }
+	          aCorporaTexts.push( tempCorpusText );
 
-	    // get corpora weight, add to array
-	    var currentP = "percentageWeightCorpus" + j;
-	    aCorporaWeights.push(parent.control.document.getElementById(currentP).innerHTML);
+	          // get corpora weight, add to array
+	          var currentP = "percentageWeightCorpus" + j;
+	          aCorporaWeights.push(parent.control.document.getElementById(currentP).innerHTML);
 
-	    //debugOutput("corpus " + j +" is: " + tempCorpusText, statusVerbosity, 2);
-	    debug("corpus weight for " + j +" is: " + parent.control.document.getElementById(currentP).innerHTML, 2);
+	          //debugOutput("corpus " + j +" is: " + tempCorpusText, statusVerbosity, 2);
+	          debug("corpus weight for " + j +" is: " + parent.control.document.getElementById(currentP).innerHTML, 2);
 
-	    j++;
-	    var currentC = "corpus" + j;
-	    oTextArea = parent.control.document.getElementById(currentC);
-	}
+	          j++;
+	          var currentC = "corpus" + j;
+	          oTextArea = parent.control.document.getElementById(currentC);
+	      }
 
-	var corpora = {
-	    texts: aCorporaTexts,
-	    weights: aCorporaWeights
-	};
+	      var corpora = {
+	              texts: aCorporaTexts,
+	          weights: aCorporaWeights
+	      };
 
-	return corpora;
+	      return corpora;
 
     };
 
@@ -211,17 +212,17 @@ var gui = function() {
     // replace multiple spaces with single space
     this.editStringCleanCorpus = function( inputText, handlePunctuation ) {
 
-	// first, remove title comment (from initial "//" to first newline)
-	if ( inputText.match(/^\/\//) ) {
+	      // first, remove title comment (from initial "//" to first newline)
+	      if ( inputText.match(/^\/\//) ) {
             inputText = inputText.replace(/^\/\/.*\n/, "");
-	}
+	      }
 
 
-	// place spaces at beginning and end of corpus
-	inputText = " " + inputText + " ";
+	      // place spaces at beginning and end of corpus
+	      inputText = " " + inputText + " ";
 
 
-	if ( handlePunctuation == "noParen" || handlePunctuation == "none" ) {
+	      if ( handlePunctuation == "noParen" || handlePunctuation == "none" ) {
             // remove parens
             inputText = inputText.replace(/\"/g, " ");   // strip: "
             inputText = inputText.replace(/\(/g, " ");
@@ -235,9 +236,9 @@ var gui = function() {
             inputText = inputText.replace(/\*/g, " ");
             inputText = inputText.replace(/\//g, " ");
             inputText = inputText.replace(/\^/g, " ");
-	}
+	      }
 
-	if ( handlePunctuation == "none" ) {
+	      if ( handlePunctuation == "none" ) {
             // remove certain punctuation (but not dashes and apostrophes)
             inputText = inputText.replace(/,/g, " ");
             inputText = inputText.replace(/\./g, " ");
@@ -246,9 +247,9 @@ var gui = function() {
             inputText = inputText.replace(/;/g, " ");
             inputText = inputText.replace(/:/g, " ");
             inputText = inputText.replace(/--/g, " ");
-	}
+	      }
 
-	if ( handlePunctuation == "all" || handlePunctuation == "noParen" ) {
+	      if ( handlePunctuation == "all" || handlePunctuation == "noParen" ) {
             // place spaces around parens
             // none of these will be in the text if "noParen"
             inputText = inputText.replace(/\"/g, " \" ");
@@ -272,85 +273,118 @@ var gui = function() {
             inputText = inputText.replace(/;/g, " ; ");
             inputText = inputText.replace(/:/g, " : ");
             inputText = inputText.replace(/--/g, " -- ");
-	}
+	      }
 
-	//inputText = inputText.replace(/\n/g, " ");
-	//inputText = inputText.replace(/\r/g, " ");
+	      //inputText = inputText.replace(/\n/g, " ");
+	      //inputText = inputText.replace(/\r/g, " ");
 
-	// collapse multiple newlines
-	inputText = inputText.replace(/\r/g, "\n");
-	inputText = inputText.replace(/\n+/g, " \n ");
+	      // collapse multiple newlines
+	      inputText = inputText.replace(/\r/g, "\n");
+	      inputText = inputText.replace(/\n+/g, " \n ");
 
-	// collapse multiple spaces
-	inputText = inputText.replace(/ +/g, " ");
+	      // collapse multiple spaces
+	      inputText = inputText.replace(/ +/g, " ");
 
-	return inputText;
+	      return inputText;
     };
 
     this.showHide = function() {
-	// choose text for the show/hide link - can contain HTML (e.g. an image)
-	var showText='Show';
-	var hideText='Hide';
+	      // choose text for the show/hide link - can contain HTML (e.g. an image)
+	      var showText='Show';
+	          var hideText='Hide';
 
-	// append show/hide links to the element directly preceding the element with a class of "toggle"
-	$('.toggle').prev().append(' (<a href="#" class="toggleLink">'+showText+'</a>)');
+	      // append show/hide links to the element directly preceding the element with a class of "toggle"
+	      $('.toggle').prev().append(' (<a href="#" class="toggleLink">'+showText+'</a>)');
 
-	// hide all of the elements with a class of 'toggle'
-	$('.toggle').hide();
+	      // hide all of the elements with a class of 'toggle'
+	      $('.toggle').hide();
 
-	// capture clicks on the toggle links
-	$('a.toggleLink').click(
-	    function() {
+	      // capture clicks on the toggle links
+	      $('a.toggleLink').click(
+	          function() {
 
-		// change the link depending on whether the element is shown or hidden
-		$(this).html ($(this).html() == hideText ? showText : hideText);
+		            // change the link depending on whether the element is shown or hidden
+		            $(this).html ($(this).html() == hideText ? showText : hideText);
 
-		// toggle the display - uncomment the next line for a basic "accordion" style
-		//$('.toggle').hide();$('a.toggleLink').html(showText);
-		$(this).parent().next('.toggle').toggle('slow');
+		            // toggle the display - uncomment the next line for a basic "accordion" style
+		            //$('.toggle').hide();$('a.toggleLink').html(showText);
+		            $(this).parent().next('.toggle').toggle('slow');
 
-		// return false so any link destination is not followed
-		return false;
+		            // return false so any link destination is not followed
+		            return false;
 
-	    });
+	          });
     },
 
 
     this.setCorpusTexts = function(){
 
-	// TODO: namespace the methods
-	$('#corpus1').val(shakespeare);
-	$('#corpus2').val(tristantzara);
-	$('#corpus3').val(lessig);
-	$('#templateText').val(self.initialTemplate);
+	      // TODO: namespace the methods
+	      $('#corpus1').val(shakespeare);
+	      $('#corpus2').val(tristantzara);
+	      $('#corpus3').val(lessig);
+	      $('#templateText').val(self.initialTemplate);
 
     };
 
     this.buildDropDown = function(id, selLength, selectedRow) {
 
-	var s = document.createElement('select');
-	s.id = id;
+	      var s = document.createElement('select');
+	      s.id = id;
 
-	for (var i = 0; i < selLength; i++) {
-	    var o = document.createElement('option');
-	    o.value = i;
-	    o.text = i;
-	    if (i == selectedRow) {
-		o.setAttribute('selected', 'selected');
-	    }
-	    s.appendChild(o);
-	}
+	      for (var i = 0; i < selLength; i++) {
+	          var o = document.createElement('option');
+	          o.value = i;
+	          o.text = i;
+	          if (i == selectedRow) {
+		            o.setAttribute('selected', 'selected');
+	          }
+	          s.appendChild(o);
+	      }
 
-	return s;
+	      return s;
 
     };
 
     // NOTE: without line-break, things get screwy....
     this.initialTemplate = "[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n" +
-	"[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n" +
-	"[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n" +
-	"[s] [s] [s] [s] [s] [s] [s] [s] [s] [s]";
+	      "[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n" +
+	      "[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n" +
+	      "[s] [s] [s] [s] [s] [s] [s] [s] [s] [s]";
 
+
+
+    this.getExistingText = function() {
+
+        var Element = function() {
+            this.id = '';  // not currently populating; don't even know if it will be needed...
+            this.text = '';
+            this.backgroundColor = ''; // TODO: refactor this semantically once working
+            };
+        var elements = [];
+
+        // 'w0' == first word element
+        var oElement = parent.editor.document.getElementById('w0');
+
+        var i = 0;
+
+        while (oElement != null) {
+
+            var el = new Element();
+            el.text = oElement.value.toLowerCase();
+            el.backgroundColor = oElement.style.backgroundColor;
+
+            elements.push(el);
+
+            i++;
+            var currentId = "w" + i;
+
+            oElement = parent.editor.document.getElementById(currentId);
+        }
+
+        return elements;
+        
+    };
 
 };
 
@@ -363,9 +397,9 @@ var editStringRemoveQuotations = function( inputText ) {
     inputText = inputText.replace(/"/g, "&#34;");  // handle "
 
     return inputText;
-};
+    };
 
-// TODO: does not appear to be used...
+    // TODO: does not appear to be used...
 // remove punctuation and newlines (except apostrophes and single-dashes)
 var editStringRemovePunctuationNewlines = function( inputText ) {
 
@@ -406,7 +440,7 @@ function toggleCorpus() {
 
     toggleVisibility('corpusSpan');
 
-}
+    }
 
 
 function toggleOptions() {
@@ -447,9 +481,9 @@ function addCorpus(doc) {
     var oElement = doc.getElementById('corpus1');
 
     while ( oElement != null ) {
-	corpusNbr++;
-	var elementName = "corpus" + corpusNbr;
-	oElement = doc.getElementById(elementName);
+	          corpusNbr++;
+	      var elementName = "corpus" + corpusNbr;
+	      oElement = doc.getElementById(elementName);
     }
     var nextNumber = corpusNbr + 1;
 
@@ -467,15 +501,15 @@ function addCorpus(doc) {
     // with some judicious use of CSS
 
     var toPrint = "<div id='corpusRegion" + corpusNbr + "'>Corpus " + corpusNbr +" : &nbsp; &nbsp; "
-	+ "<a href='javascript:clearCorpus('corpus" + corpusNbr + "')'>clear</a>"
-	+ "&nbsp; &nbsp; weight: <select id='weightCorpus" + corpusNbr + "' onchange='javascript:calculateWeights()'>"
-	+ "<option selected value='0'>0<option value='1'>1<option value='2'>2<option value='3'>3<option value='4'>4"
-	+ "<option value='5'>5<option value='6'>6<option value='7'>7<option value='8'>8<option value='9'>9"
-	+ "<option value='10'>10</select>"
-	+ "&nbsp; (<span id='percentageWeightCorpus" + corpusNbr + "'>0</span>%)"
-	+ "<br>\n"
-	+ "<textarea rows='4' cols='60' id='corpus" + corpusNbr + "'>\n</textarea>\n"
-	+ "</div>\n";
+	      + "<a href='javascript:clearCorpus('corpus" + corpusNbr + "')'>clear</a>"
+	      + "&nbsp; &nbsp; weight: <select id='weightCorpus" + corpusNbr + "' onchange='javascript:calculateWeights()'>"
+	      + "<option selected value='0'>0<option value='1'>1<option value='2'>2<option value='3'>3<option value='4'>4"
+	      + "<option value='5'>5<option value='6'>6<option value='7'>7<option value='8'>8<option value='9'>9"
+	      + "<option value='10'>10</select>"
+	      + "&nbsp; (<span id='percentageWeightCorpus" + corpusNbr + "'>0</span>%)"
+	      + "<br>\n"
+	      + "<textarea rows='4' cols='60' id='corpus" + corpusNbr + "'>\n</textarea>\n"
+	      + "</div>\n";
 
     // workaround for dealing with magic-string text...
     var d = doc.createElement('div');
@@ -488,7 +522,7 @@ function addCorpus(doc) {
     //var elementIdName = "additionalCorpus" + corpusNbr;
     //doc.getElementById( elementIdName ).innerHTML = toPrint;
 
-}
+    }
 
 function calculateWeights() {
 
@@ -497,26 +531,26 @@ function calculateWeights() {
     var total=0;
 
     while ( oElement != null ) {
-	var currentWeight = parseInt(oElement.options[oElement.selectedIndex].value);
-	total += parseInt(currentWeight);
-	i++;
-	var currentId = "weightCorpus" + i;
-	oElement = parent.control.document.getElementById( currentId );
+	      var currentWeight = parseInt(oElement.options[oElement.selectedIndex].value);
+	      total += parseInt(currentWeight);
+	      i++;
+	      var currentId = "weightCorpus" + i;
+	      oElement = parent.control.document.getElementById( currentId );
     }
 
     oElement = parent.control.document.getElementById('weightCorpus1');
-    var oDisplay = parent.control.document.getElementById('percentageWeightCorpus1');
-    i=1;
+        var oDisplay = parent.control.document.getElementById('percentageWeightCorpus1');
+        i=1;
     while ( oElement != null ) {
-	var currentWeight = parseInt(oElement.options[oElement.selectedIndex].value);
-	var newWeight = Math.round( (currentWeight/total) * 100 );
-	oDisplay.innerHTML = newWeight;
+	      var currentWeight = parseInt(oElement.options[oElement.selectedIndex].value);
+	      var newWeight = Math.round( (currentWeight/total) * 100 );
+	      oDisplay.innerHTML = newWeight;
 
-	i++;
-	var currentId = "weightCorpus" + i;
-	var currentDisplay = "percentageWeightCorpus" + i;
-	oElement = parent.control.document.getElementById( currentId );
-	oDisplay = parent.control.document.getElementById( currentDisplay );
+	      i++;
+	      var currentId = "weightCorpus" + i;
+	      var currentDisplay = "percentageWeightCorpus" + i;
+	      oElement = parent.control.document.getElementById( currentId );
+	      oDisplay = parent.control.document.getElementById( currentDisplay );
     }
 
 }
@@ -530,11 +564,11 @@ function setSelectedAll() {
     var i=0;
 
     while ( oElement != null ) {
-	oElement.style.backgroundColor = "#FF9999";
+	      oElement.style.backgroundColor = "#FF9999";
 
-	i++;
-	var currentId = "w" + i;
-	oElement = parent.editor.document.getElementById( currentId );
+	      i++;
+	          var currentId = "w" + i;
+	      oElement = parent.editor.document.getElementById( currentId );
     }
 }
 
@@ -544,11 +578,11 @@ function setSelectedNone() {
     var i=0;
 
     while ( oElement != null ) {
-	oElement.style.backgroundColor = "transparent";
+	      oElement.style.backgroundColor = "transparent";
 
-	i++;
-	var currentId = "w" + i;
-	oElement = parent.editor.document.getElementById( currentId );
+	      i++;
+	      var currentId = "w" + i;
+	      oElement = parent.editor.document.getElementById( currentId );
     }
 }
 
@@ -559,36 +593,36 @@ function appendButton( editorString, wordToPrint, generatedWordsIndex, areWordsS
 
     // TODO: abstract these out to css-classes
     if ( thisWordSelectedBegin == "startSelected" ) {
-	buttonColor = "#FF9999";
+	      buttonColor = "#FF9999";
     } else {
-	buttonColor = "transparent";
+	      buttonColor = "transparent";
     }
 
     if ( changeSelectionEffect == "togglesBetween" ) {
-	changeSelection = "onmouseover='javascript:switchColor(this)'";
+	      changeSelection = "onmouseover='javascript:switchColor(this)'";
     } else if ( changeSelectionEffect == "changesOneWay" || changeSelectionEffect == "changesOneWayPlusClick" ) {
-	if ( areWordsSelectedBegin == "startSelected" ) {
-	    changeSelection = "onmouseover='javascript:switchToUnselected(this)'";
-	} else {
-	    changeSelection = "onmouseover='javascript:switchToSelected(this)'";
-	}
+	      if ( areWordsSelectedBegin == "startSelected" ) {
+	          changeSelection = "onmouseover='javascript:switchToUnselected(this)'";
+	      } else {
+	          changeSelection = "onmouseover='javascript:switchToSelected(this)'";
+	      }
     }
 
     if ( changeSelectionEffect == "requiresClick" ) {
-	changeSelection2 = " onclick='javascript:switchColor(this)'";
-	/*
-	 if ( areWordsSelectedBegin == "startSelected" ) {
-	 changeSelection2 = " onclick='javascript:switchToUnselected(this)'";
-	 } else {
-	 changeSelection2 = " onclick='javascript:switchToSelected(this)'";
-	 }
-	 */
+	      changeSelection2 = " onclick='javascript:switchColor(this)'";
+	      /*
+	        if ( areWordsSelectedBegin == "startSelected" ) {
+	        changeSelection2 = " onclick='javascript:switchToUnselected(this)'";
+	        } else {
+	        changeSelection2 = " onclick='javascript:switchToSelected(this)'";
+	        }
+	      */
     } else if ( changeSelectionEffect == "changesOneWayPlusClick" ) {
-	if ( areWordsSelectedBegin == "startSelected" ) {
-	    changeSelection2 = " onclick='javascript:switchToSelected(this)'";
-	} else {
-	    changeSelection2 = " onclick='javascript:switchToUnselected(this)'";
-	}
+	      if ( areWordsSelectedBegin == "startSelected" ) {
+	          changeSelection2 = " onclick='javascript:switchToSelected(this)'";
+	      } else {
+	          changeSelection2 = " onclick='javascript:switchToUnselected(this)'";
+	      }
     }
 
 
@@ -635,7 +669,7 @@ function debugOutput( output, statusVerbosity, thisVerbosity ) {
     var area = parent.control.document.getElementById("debugOutput");
 
     if ( area && statusVerbosity >= thisVerbosity ) {
-	area.value =  area.value + output + "\n";
+	      area.value =  area.value + output + "\n";
     }
 
 }
@@ -655,7 +689,7 @@ function clearTemplateText() {
 
 // TODO: all the clear textareas above should be like this (I was learning javascript as I did this...)
 function clearTextarea( elementName ) {
-    parent.control.document.getElementById(elementName).value = "";
+        parent.control.document.getElementById(elementName).value = "";
 }
 
 
@@ -666,17 +700,17 @@ function setBaseForm(dropdownForm) {
     var selectedValue = dropdownForm.options[index].value;
 
     if ( selectedValue == "couplet" ) {
-	parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] ";
+	      parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] ";
     } else if ( selectedValue == "quatrain" ) {
-	parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s]";
+	      parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s]";
     } else if ( selectedValue == "blankSonnet" ) {
-	parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s]";
+	      parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [s] [s] [s]";
     } else if ( selectedValue == "haiku" ) {
-	parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] ";
+	      parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] ";
     } else if ( selectedValue == "tanka" ) {
-	parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] ";
+	      parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] ";
     } else if ( selectedValue == "renga" ) {
-	parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] ";
+	      parent.control.document.controlForm.templateText.value = "[s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[n]\n[s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] [s] [s] [n]\n[s] [s] [s] [s] [s] ";
     }
 };
 
