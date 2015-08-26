@@ -103,21 +103,19 @@ var gui = function() {
         var capitalizeCustomSentence = false;
         var capitalizeCustomLine = false;
         var capitalizeCustomI = false;
+
         if ( document.getElementById('capitalizeAsCorpus').checked == true ) {
             capitalizeMethod = 'capitalizeAsCorpus';
         } else  if ( document.getElementById('capitalizeNone').checked == true ) {
             capitalizeMethod = 'capitalizeNone';
         } else  if ( document.getElementById('capitalizeCustom').checked == true ) {
+
             capitalizeMethod = 'capitalizeCustom';
-            if ( document.getElementById('capitalizeCustomSentence').checked == true ) {
-                capitalizeCustomSentence = true;
-            }
-            if ( document.getElementById('capitalizeCustomLine').checked == true ) {
-                capitalizeCustomLine = true;
-            }
-            if ( document.getElementById('capitalizeCustomI').checked == true ) {
-                capitalizeCustomI = true;
-            }
+
+            capitalizeCustomSentence = document.getElementById('capitalizeCustomSentence').checked;
+            capitalizeCustomLine = document.getElementById('capitalizeCustomLine').checked;
+            capitalizeCustomI = document.getElementById('capitalizeCustomI').checked;
+
         }
 
         options.capitalize = {
@@ -145,7 +143,6 @@ var gui = function() {
         options.areWordsSelectedBegin = areWordsSelectedBegin;
         options.thisWordSelectedBegin = thisWordSelectedBegin;
         options.changeSelectionEffect = changeSelectionEffect;
-
 
         // parameter: status verbosity
         var svl = document.getElementById('statusVerbosityLevel');
