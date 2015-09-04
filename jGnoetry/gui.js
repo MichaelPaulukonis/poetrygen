@@ -72,6 +72,7 @@ var gui = function() {
 
         // ideally, debug [wrapper] is scoped to ALL of the functions called by generate, as well
         // this requires encapsulating them all....
+        clearDebug();
         var jg = new jGnoetry(debug);
         var existingText = self.getExistingText();
         // TODO: ugh. that's a lot of ugly parameters
