@@ -41,7 +41,8 @@ $(document).ready(
         $('[id!=weightCorpus]').bind('change', calculateWeights);
 
         // so, what this adds has hard-coded values in it...
-        $('#addCorpus').click(function() { addCorpus(parent.control.document); });
+        // $('#addCorpus').click(function() { addCorpus(parent.control.document); });
+        $('#addCorpus').click(function() { g.addCorpus(parent.control.document); });
     }
 
 );
@@ -320,6 +321,64 @@ var gui = function() {
 
     };
 
+    // pass in document reference, since we're dealing with a frameset
+    // this abstracts the link to any particular frame
+    // although in practice, only one frame has these elements...
+    this.addCorpus = function(doc) {
+
+        var corpusNbr = 0;
+
+        // find the new corpus number
+        // TODO: rewrite this. this is... sub-optimal
+        var oElement = doc.getElementById('corpus1');
+
+        while ( oElement != null ) {
+            corpusNbr++;
+            var elementName = 'corpus' + corpusNbr;
+            oElement = doc.getElementById(elementName);
+        }
+        var nextNumber = corpusNbr + 1;
+
+        // at this point, corpusNbr = the number for the new corpus element
+
+        // TODO: instead of outputting a string, let's build a real element, and bind it accordingly
+
+        var s = this.buildDropDown('weightCorpus' + corpusNbr, 10, 0);
+        //$(s).bind('change', calculateWeights);
+
+        //$('<p>Test</p>').insertBefore('.inner');
+        //$(s).insertBefore('#addCorpus');
+
+        // TODO: I think we can get rid of the breaks and non-breaking spaces
+        // with some judicious use of CSS
+
+
+
+        var toPrint = '<div id="corpusRegion' + corpusNbr + '">Corpus ' + corpusNbr +' : &nbsp; &nbsp; '
+                + '<a href="javascript:clearCorpus(\'corpus' + corpusNbr + '\')">clear</a>'
+                + '&nbsp; &nbsp; weight: <select id="weightCorpus' + corpusNbr + '" onchange="javascript:calculateWeights()">'
+                + '<option selected value="0">0<option value="1">1<option value="2">2<option value="3">3<option value="4">4'
+                + '<option value="5">5<option value="6">6<option value="7">7<option value="8">8<option value="9">9'
+                + '<option value="10">10</select>'
+                + '&nbsp; (<span id="percentageWeightCorpus' + corpusNbr + '">0</span>%)'
+                + '<br>\n'
+                + '<textarea rows="4" cols="60" id="corpus' + corpusNbr + '">\n</textarea>\n'
+                + '</div>\n';
+
+        // workaround for dealing with magic-string text...
+        var d = doc.createElement('div');
+        d.innerHTML = toPrint;
+
+        var ac = doc.getElementById('addCorpus');
+        ac.parentNode.insertBefore(d, ac);
+
+
+        //var elementIdName = 'additionalCorpus' + corpusNbr;
+        //doc.getElementById( elementIdName ).innerHTML = toPrint;
+
+    };
+
+
     this.buildDropDown = function(id, selLength, selectedRow) {
 
         var s = document.createElement('select');
@@ -434,61 +493,6 @@ function setVisibility(targetId, visible) {
 
 }
 
-
-// pass in document reference, since we're dealing with a frameset
-// this abstracts the link to any particular frame
-// although in practice, only one frame has these elements...
-function addCorpus(doc) {
-
-    var corpusNbr = 0;
-
-    // find the new corpus number
-
-    var oElement = doc.getElementById('corpus1');
-
-    while ( oElement != null ) {
-        corpusNbr++;
-        var elementName = 'corpus' + corpusNbr;
-        oElement = doc.getElementById(elementName);
-    }
-    var nextNumber = corpusNbr + 1;
-
-    // at this point, corpusNbr = the number for the new corpus element
-
-    // TODO: instead of outputting a string, let's build a real element, and bind it accordingly
-
-    //var s = buildDropDown('weightCorpus' + corpusNbr, 10, 0);
-    //$(s).bind('change', calculateWeights);
-
-    //$('<p>Test</p>').insertBefore('.inner');
-    //$(s).insertBefore('#addCorpus');
-
-    // TODO: I think we can get rid of the breaks and non-breaking spaces
-    // with some judicious use of CSS
-
-    var toPrint = '<div id="corpusRegion' + corpusNbr + '">Corpus ' + corpusNbr +' : &nbsp; &nbsp; '
-            + '<a href="javascript:clearCorpus("corpus' + corpusNbr + '")">clear</a>'
-            + '&nbsp; &nbsp; weight: <select id="weightCorpus' + corpusNbr + '" onchange="javascript:calculateWeights()">'
-            + '<option selected value="0">0<option value="1">1<option value="2">2<option value="3">3<option value="4">4'
-            + '<option value="5">5<option value="6">6<option value="7">7<option value="8">8<option value="9">9'
-            + '<option value="10">10</select>'
-            + '&nbsp; (<span id="percentageWeightCorpus' + corpusNbr + '">0</span>%)'
-            + '<br>\n'
-            + '<textarea rows="4" cols="60" id="corpus' + corpusNbr + '">\n</textarea>\n'
-            + '</div>\n';
-
-    // workaround for dealing with magic-string text...
-    var d = doc.createElement('div');
-    d.innerHTML = toPrint;
-
-    var ac = doc.getElementById('addCorpus');
-    ac.parentNode.insertBefore(d, ac);
-
-
-    //var elementIdName = 'additionalCorpus' + corpusNbr;
-    //doc.getElementById( elementIdName ).innerHTML = toPrint;
-
-}
 
 function calculateWeights() {
 
