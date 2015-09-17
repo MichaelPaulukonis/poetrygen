@@ -343,18 +343,23 @@ var gui = function() {
 
         // TODO: instead of outputting a string, let's build a real element, and bind it accordingly
 
-        var s = this.buildDropDown('weightCorpus' + corpusNbr, 10, 0);
-        //$(s).bind('change', calculateWeights);
+        // var s = this.buildDropDown('weightCorpus' + corpusNbr, 10, 0);
+        // $(s).bind('change', calculateWeights);
 
-        //$('<p>Test</p>').insertBefore('.inner');
-        //$(s).insertBefore('#addCorpus');
+        // // $('<p>Test</p>').insertBefore('.inner'); // uh... what was this before. pure testing?
+
+        // var d = doc.createElement('div');
+        // d.id = 'corpusRegion' + corpusNbr;
+
+
+        // $(s).insertBefore('#addCorpus');
 
         // TODO: I think we can get rid of the breaks and non-breaking spaces
         // with some judicious use of CSS
 
 
 
-        var toPrint = '<div id="corpusRegion' + corpusNbr + '">Corpus ' + corpusNbr +' : &nbsp; &nbsp; '
+        var toPrint = 'Corpus ' + corpusNbr +' : &nbsp; &nbsp; '
                 + '<a href="javascript:clearCorpus(\'corpus' + corpusNbr + '\')">clear</a>'
                 + '&nbsp; &nbsp; weight: <select id="weightCorpus' + corpusNbr + '" onchange="javascript:calculateWeights()">'
                 + '<option selected value="0">0<option value="1">1<option value="2">2<option value="3">3<option value="4">4'
@@ -362,29 +367,29 @@ var gui = function() {
                 + '<option value="10">10</select>'
                 + '&nbsp; (<span id="percentageWeightCorpus' + corpusNbr + '">0</span>%)'
                 + '<br>\n'
-                + '<textarea rows="4" cols="60" id="corpus' + corpusNbr + '">\n</textarea>\n'
-                + '</div>\n';
+                + '<textarea rows="4" cols="60" id="corpus' + corpusNbr + '">\n</textarea>\n';
 
         // workaround for dealing with magic-string text...
         var d = doc.createElement('div');
+        d.id = 'corpusRegion' + corpusNbr;
         d.innerHTML = toPrint;
 
         var ac = doc.getElementById('addCorpus');
-        ac.parentNode.insertBefore(d, ac);
+        ac.parentNode.insertBefore(d, ac.nextSibling);
 
 
-        //var elementIdName = 'additionalCorpus' + corpusNbr;
-        //doc.getElementById( elementIdName ).innerHTML = toPrint;
+        var elementIdName = 'additionalCorpus' + corpusNbr;
+        doc.getElementById( elementIdName ).innerHTML = toPrint;
 
     };
 
 
-    this.buildDropDown = function(id, selLength, selectedRow) {
+    this.buildDropDown = function(id, max, selectedRow) {
 
         var s = document.createElement('select');
         s.id = id;
 
-        for (var i = 0; i < selLength; i++) {
+        for (var i = 0; i <= max; i++) {
             var o = document.createElement('option');
             o.value = i;
             o.text = i;
